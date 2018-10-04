@@ -1,0 +1,174 @@
+%!Adobe-FontList 1.14
+%Locale:0x409
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Black
+FamilyName:SF Pro Display
+StyleName:Black
+FullName:SF Pro Display Black
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_black.ttf
+DataFormat:sfntData
+FileLength:426564
+FileModTime:1524591774
+WeightClass:900
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Bold
+FamilyName:SF Pro Display
+StyleName:Bold
+FullName:SF Pro Display Bold
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_bold.ttf
+DataFormat:sfntData
+FileLength:435904
+FileModTime:1524591774
+WeightClass:700
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Heavy
+FamilyName:SF Pro Display
+StyleName:Heavy
+FullName:SF Pro Display Heavy
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_heavy.ttf
+DataFormat:sfntData
+FileLength:438128
+FileModTime:1524591774
+WeightClass:800
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Light
+FamilyName:SF Pro Display
+StyleName:Light
+FullName:SF Pro Display Light
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_light.ttf
+DataFormat:sfntData
+FileLength:432484
+FileModTime:1524591774
+WeightClass:300
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Medium
+FamilyName:SF Pro Display
+StyleName:Medium
+FullName:SF Pro Display Medium
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_medium.ttf
+DataFormat:sfntData
+FileLength:433584
+FileModTime:1524591774
+WeightClass:500
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Regular
+FamilyName:SF Pro Display
+StyleName:Regular
+FullName:SF Pro Display Regular
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_regular.ttf
+DataFormat:sfntData
+FileLength:413924
+FileModTime:1524591774
+WeightClass:400
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Semibold
+FamilyName:SF Pro Display
+StyleName:Semibold
+FullName:SF Pro Display Semibold
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_semibold.ttf
+DataFormat:sfntData
+FileLength:435008
+FileModTime:1524591774
+WeightClass:600
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Thin
+FamilyName:SF Pro Display
+StyleName:Thin
+FullName:SF Pro Display Thin
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_thin.ttf
+DataFormat:sfntData
+FileLength:434600
+FileModTime:1524591774
+WeightClass:200
+WidthClass:5
+AngleClass:0
+%EndFont
+
+%BeginFont
+Handler:DirectoryHandler
+FontType:TrueType
+FontName:SFProDisplay-Ultralight
+FamilyName:SF Pro Display
+StyleName:Ultralight
+FullName:SF Pro Display Ultralight
+MenuName:SF Pro Display
+StyleBits:0
+WritingScript:Roman
+OutlineFileName:C:\Users\Omar\Desktop\OMirror\Font\sf_ultrathin.ttf
+DataFormat:sfntData
+FileLength:434912
+FileModTime:1524591774
+WeightClass:100
+WidthClass:5
+AngleClass:0
+%EndFont
+

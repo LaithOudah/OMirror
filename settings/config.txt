@@ -1,0 +1,7 @@
+namn=Omar
+rgb=255:025:120
+rgb_mode=0
+rgb_delay=500
+bluetooth_id=magic_mirror
+wifi_ssid=
+wifi_pass=
