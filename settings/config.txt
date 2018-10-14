@@ -5,6 +5,7 @@ rgb_cycle_delay=20
 language=SE
 weather_cord_x=
 weather_cord_y=
+weather_api=681a848abbfde6c9da084c5e86d2a6f2
 rgb_flash_sequence=255,0,0:0,255,0:0,0,255
 rgb_mode=0
 autosleep=
