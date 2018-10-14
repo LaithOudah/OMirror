@@ -1,36 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
-#
- # -----------------------------------------------------
- # File        fading.py
- # Authors     David Ordnung
- # License     GPLv3
- # Web         http://dordnung.de/raspberrypi-ledstrip/
- # -----------------------------------------------------
- # 
- # Copyright (C) 2014-2017 David Ordnung
- # 
- # This program is free software: you can redistribute it and/or modify
- # it under the terms of the GNU General Public License as published by
- # the Free Software Foundation, either version 3 of the License, or
- # any later version.
- #  
- # This program is distributed in the hope that it will be useful,
- # but WITHOUT ANY WARRANTY; without even the implied warranty of
- # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- # GNU General Public License for more details.
- # 
- # You should have received a copy of the GNU General Public License
- # along with this program. If not, see <http://www.gnu.org/licenses/>
-#
-
-
-# This script needs running pigpio (http://abyz.co.uk/rpi/pigpio/)
-
-
-###### CONFIGURE THIS ######
-
 # The Pins. Use Broadcom numbers.
 GPIO_R = 17
 GPIO_G = 27
@@ -39,27 +6,21 @@ GPIO_BUTTON = 18
 GPIO_SENSOR_1 = 23
 GPIO_SENSOR_2 = 24
 
-# Number of color changes per step (more is faster, less is slower).
-# You also can use 0.X floats.
-STEPS     = 1
-
-###### END ######
-
-
-
+# Imports
 import RPi.GPIO as GPIO
 import os
 import sys
 import time
+
+# initialize pigpiod
+
+os.system("sudo pigpiod")
+time.sleep(2) # sleep 2 seconds before executing rest of program, let pigpiod initialize
+
 import pigpio
-import thread
+import threading
 
 bright = 255
-r = 255.0
-g = 0.0
-b = 0.0
-
-
 
 pi = pigpio.pi()
 
@@ -67,69 +28,160 @@ def setLights(pin, brightness):
 	realBrightness = int(int(brightness) * (float(bright) / 255.0))
 	pi.set_PWM_dutycycle(pin, realBrightness)
 
+# GPIO Setup
 GPIO.setmode(GPIO.BCM)
 
 GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-## GPIO.setup(23, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(GPIO_SENSOR_1, GPIO.IN)
+GPIO.setup(GPIO_SENSOR_2, GPIO.IN)
 
+# Preset values
 colour = (255, 255, 255)
 
-fade_sequence = ((255, 255,255), (255, 0, 0), (0, 255, 0), (0,0,255))
-fade_step = 0
-fade_delay = 1000 ## in ms
-fade_active = False
-rgb_active = True
+flash_sequence = ((255, 255,255), (255, 0, 0), (0, 255, 0), (0,0,255))
+flash_step = 0
+flash_delay = 1000 ## in ms
+flash_active = False
+cycle_active = False
+rgb_active = False
 
+app_active = True
+
+# RGB cycle
 def RGB_Cycle():
     return 0
 
+# RGB Single
 def RGB_Single():
     setLights(GPIO_R, colour[0])
     setLights(GPIO_G, colour[1])
     setLights(GPIO_B, colour[2])
 
-def RGB_Flash(threadName, delay):
-    global fade_step, fade_sequence, fade_active
-    fade_active = True
-    while mode == 1 and rgb_active:
-        for colour in fade_sequence:
-            if mode != 0 and not rgb_active:
+# RGB Cycle thread
+class RGB_Cycle (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        global cycle_active
+        # Loop to 255
+        startColour = list((255, 0, 0))
+        
+        cycle_active = True
+        for decColour in range (0, 3):
+            if not rgb_active:
                 break
-            setLights(GPIO_R, colour[0])
-            setLights(GPIO_G, colour[1])
-            setLights(GPIO_B, colour[2])
-            time.sleep(0.2)
+            if not cycle_active:
+                break
             
-    fade_active = False
+            if decColour == 2:
+                incColour = 0
+            else:
+                incColour = decColour + 1
 
+            for i in range(0, 255):
+                if not rgb_active:
+                    break
+                if not cycle_active:
+                    break
+                
+                startColour[decColour] -= 1
+                startColour[incColour] += 1
+                
+                setLights(GPIO_R, startColour[0])
+                setLights(GPIO_G, startColour[1])
+                setLights(GPIO_B, startColour[2])
+                
+                time.sleep(0.02)
+        cycle_active = False
+
+Thread_RGB_Cycle = RGB_Cycle()
+
+# RGB Flash thread
+class RGB_Flash (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        global flash_active, flash_sequence, flash_step
+        flash_active = True
+        while True:
+            if not rgb_active:
+                break
+            if not flash_active:
+                break
+            for colour in flash_sequence:
+                if not rgb_active:
+                    break
+                if not flash_active:
+                    break
+                setLights(GPIO_R, colour[0])
+                setLights(GPIO_G, colour[1])
+                setLights(GPIO_B, colour[2])
+                
+                time.sleep(flash_delay/1000)           
+        flash_active = False
+        
+
+Thread_RGB_Flash = RGB_Flash()
+
+# RGB Off state
 def RGB_off():
-    global rgb_active
+    global rgb_active, cycle_active, flash_active
     rgb_active = False
+    cycle_active = False
+    flash_active = False
+    
     setLights(GPIO_R, 0)
     setLights(GPIO_G, 0)
     setLights(GPIO_B, 0)
 
+def BUTTON_status():
+    return GPIO.input(GPIO_BUTTON)
+
+
+# RGB ON, check mode
+def RGB_on():
+    global rgb_active, cycle_active, flash_active, Thread_RGB_Flash, Thread_RGB_Cycle
+    rgb_active = True
+    if mode == 0:
+        cycle_active = False
+        flash_active = False
+        RGB_Single()
+    elif mode == 1:
+        time.sleep(0.01)
+        cycle_active = False
+        try:
+            Thread_RGB_Flash.start()
+        except RuntimeError:
+            if not flash_active:
+                Thread_RGB_Flash = RGB_Flash()
+                Thread_RGB_Flash.start()
+    elif mode == 2:
+        time.sleep(0.01)
+        flash_active = False
+        try:
+            Thread_RGB_Cycle.start()
+        except Exception:
+            if not cycle_active:
+                Thread_RGB_Cycle= RGB_Cycle()
+                Thread_RGB_Cycle.start()
+                
 ## Mode 0 = One color
 ## Mode 1 = Flash
 ## Mode 2 = Cycle
+        
+mode = 2
 
-
-
-mode = 0
-
-while True:
+def main():
     if(GPIO.input(GPIO_BUTTON) == False):
-        '''
-        rgb_active = True
-        if mode == 0:
-            RGB_Single()
-        elif mode == 1:
-            if not fade_active:
-                thread.start_new_thread(RGB_Flash, ("fade", 0))
-        elif mode == 2:
-            RGB_Cycle()
-        '''
+        RGB_on()
     else:
         RGB_off()
 
-pi.stop()
+# start threads
+if __name__ == '__main__':
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("Interrupted")
+        
+        
