@@ -1,11 +1,12 @@
+from pyowm.utils import timeformatutils
 from datetime import datetime, date, timedelta
 import pyowm
 
 # set API
 owm = pyowm.OWM("681a848abbfde6c9da084c5e86d2a6f2")
 
-# Set location, default Gothenburg, SE
-observation = owm.three_hours_forecast("Gothenburg,SE")
+# Set location, default Växjö, SE
+observation = owm.three_hours_forecast("Växjö,SE")
 
 # Get forecast
 observationArray = {}
@@ -16,7 +17,7 @@ def setObservation(obs):
     observation = owm.three_hours_forecast(obs)
 
 def getObservation():
-    today = datetime.now()
+    today = datetime.now() + timedelta(hours=1) # Prevent bug from happening
     today_2 = today
     
     # 4 for today
