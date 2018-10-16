@@ -1,9 +1,4 @@
 @win
-- Aftonbladet RSS
-	- Spara data
-- Väderprognos
-	- Läsa in JSON
-
 - Whos prettriest of them all
 	- Visa namn
 
@@ -14,12 +9,6 @@
 @pi
 - Tilt function
 	- Känna av tilt => ändra res
-- Stänga av/Sätta på
-	- Koppla Knapp till skärmen
-		- Om det inte går, gör så att UI göms
-- RGB
-	- Testa med RGB lampa
-
 - Bluetooth
 	- Connecta med Bluetooth
 
@@ -63,30 +52,3 @@
 @ ÖVRIGT
 - transitions
 - Göra finare
-
-
-
-
-
-
-
-
-
-
-Väderprognos - api https://www.smhi.se/klimatdata/oppna-data/meteorologiska-data
-http://opendata.smhi.se/apidocs/metfcst/parameters.html
-
-Aftonbladet - rss https://www.aftonbladet.se/nyheter/rss.xml
-
-
-Protocol
-rgb_mode = 0 - One color
-rgb_mode = 1 - Swapping betweens colors with interval
-rgb_mode = 2 - Fade between colors
-
-
-http://effbot.org/zone/wck-1.htm
-https://gist.github.com/jamesotron/766994
-
-
-rgb_delay i ms
