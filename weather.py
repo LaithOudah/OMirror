@@ -1,11 +1,11 @@
-import datetime
+from datetime import datetime, date, timedelta
 import pyowm
 
 # set API
 owm = pyowm.OWM("681a848abbfde6c9da084c5e86d2a6f2")
 
-# Set location, default Stockholm, SE
-observation = owm.three_hours_forecast("Stockholm,SE")
+# Set location, default Gothenburg, SE
+observation = owm.three_hours_forecast("Gothenburg,SE")
 
 # Get forecast
 observationArray = {}
@@ -16,34 +16,36 @@ def setObservation(obs):
     observation = owm.three_hours_forecast(obs)
 
 def getObservation():
-    today_1 = datetime.datetime.now()
-    
-    # forecast always at 14.00 on the next days
-    today_2 = (today_1 + datetime.timedelta(days=1)).replace(minute=0, hour=14, second=0)
+    today = datetime.now()
+    today_2 = today
     
     # 4 for today
     # 4 for day 1,2,3,4
-    for i in range (4, 9):
-        if i >= 0 and i < 4:
-            observationArray[0] = observation.get_weather_at(today_1)
-            today_1 += datetime.timedelta(hours=3) # 3 hour difference between todays forecast
+    for i in range (0, 8):
+        if i == 0:
+            observationArray[i] = observation.get_weather_at(today)
+        elif i > 0 and i < 4:
+            observationArray[i] = observation.get_weather_at(today + timedelta(hours=(i-1)*3))
         else:
-            today_2 += datetime.timedelta(days=1)
-            observationArray[i] = observation.get_weather_at(today_2)
-
+            today_3 = today_2 + timedelta(days=abs(3-i))
+            observationArray[i] = observation.get_weather_at(datetime(today_3.year, today_3.month, today_3.day, 14, 0, 0))
 
 # Create aray for weather variables
 def getForecast():
-    for i in range (0, 5):
+    for i in range (0, 8):
         temp = observationArray[i].get_temperature('celsius')
         
-        forecast[i] = { "status": observationArray[i].get_status(),
-                        "temp": temp["temp"],
-                        "temp_max": temp["temp_max"],
-                        "temp_min": temp["temp_min"]
-                        }
+        forecastArray[i] = { "status": observationArray[i].get_status(),
+                            "temp": temp["temp"],
+                            "temp_max": temp["temp_max"],
+                            "temp_min": temp["temp_min"]
+                            }
+
 
 def updateAll():
     getObservation()
+    getForecast()
+    for i in range (0, 8):
+        print(forecastArray[i])
 
 updateAll()
