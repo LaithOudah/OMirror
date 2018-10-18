@@ -22,6 +22,7 @@ def news_Parse():
         except Exception:
             updated = False
         newsArray[i] = (post.title, post.published)
+        print(post.published + " " + post.title)
         
         # Break
         i += 1
@@ -35,5 +36,4 @@ def newsUpdated():
     else:
         return False
 
-news_Parse()
 news_Parse()
