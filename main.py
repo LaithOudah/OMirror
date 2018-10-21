@@ -2,8 +2,10 @@
 # -*- coding: utf-8 -*- 
 
 import os, time
-import rgb
-import sys, pygame
+import data # Data
+import rgb # RGB
+import sys, pygame # GUI
+import news, weather # News & Weather
 
 
 pygame.init()
@@ -415,7 +417,7 @@ def app_loop():
         else:
             screen.fill(black)
             rgb.RGB_off()
-            
+        
         pygame.display.update()
         
         # End gui
@@ -429,8 +431,12 @@ def app_loop():
         clock.tick(60)
  
 
-
+# start app
 app_loop()
+
+# Start Threads
+app_getData()
+app_updateInfo()
 
 # Reset GPIO inputs
 rgb.RGB_off()

@@ -46,7 +46,3 @@ def getForecast():
 def updateAll():
     getObservation()
     getForecast()
-    for i in range (0, 8):
-        print(forecastArray[i])
-
-updateAll()

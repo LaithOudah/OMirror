@@ -36,7 +36,7 @@ GPIO.setup(GPIO_SENSOR_1, GPIO.IN)
 GPIO.setup(GPIO_SENSOR_2, GPIO.IN)
 
 # Preset values
-colour = (255, 255, 255)
+colour = (255, 0, 0)
 
 flash_sequence = ((255, 255,255), (255, 0, 0), (0, 255, 0), (0,0,255))
 flash_step = 0
