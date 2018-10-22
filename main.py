@@ -1,17 +1,33 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-
-import os, time
+import os, time, locale
 import data # Data
 import rgb # RGB
 import sys, pygame # GUI
 import news, weather # News & Weather
+import threading, socket
 
+# variables
+Running = True
+internetConnection = False
 
+name = ""
+bluetooth_name = ""
+wifi_pass = ""
+wifi_ssid = ""
+language = ""
+
+autosleep = 0
+
+## Init
 pygame.init()
 pygame.font.init()
 
+locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
+  
+#screen = pygame.display.set_mode((500, 500))
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+
 pygame.display.set_caption('OMirror')
 icon = pygame.image.load('images/icon.png')
 pygame.display.set_icon(icon)
@@ -21,6 +37,70 @@ clock = pygame.time.Clock()
 w, h = pygame.display.get_surface().get_size()
 black = 0, 0, 0
 white = 255, 255, 255
+
+# App get data thread
+class app_getDataThread (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            if(Running == False):
+                break
+            data.readData()
+            
+            checkData()
+            
+            # Check internet connection
+            internetConnection = checkConnection()
+            
+            if internetConnection:
+                news.news_Parse()
+                weather.updateAll()
+
+
+# check connection
+def checkConnection():
+    try:
+        socket.create_connection(("www.google.com", 80))
+        return True
+    except OSError:
+        pass
+    return False
+
+# Check data
+def checkData():
+    global name,bluetooth_name, wifi_ssid, wifi_pass, autosleep, language
+    
+    cc = data.getData("rgb_single").split(",")
+    rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
+    
+    fs = data.getData("rgb_flash_sequence").split(":")
+    for k, v in enumerate(fs):
+        v = v.split(",")
+        for k2, v2 in enumerate(v):
+            v[k2] = int(v2)
+        fs[k] = v
+    
+    rgb.flash_sequence = fs
+    rgb.flash_delay = float(data.getData("rgb_flash_delay"))
+    rgb.mode = int(data.getData("rgb_mode"))
+    
+    weather.cord_x = float(data.getData("weather_cord_x"))
+    weather.cord_y = float(data.getData("weather_cord_y"))
+    weather.api = data.getData("weather_api")
+    
+    news.setRSS(data.getData("news_rss"))
+    news.setMax(int(data.getData("news_max")))
+    
+    name = data.getData("name")
+
+    wifi_ssid = data.getData("wifi_ssid")
+    wifi_pass = data.getData("wifi_pass")
+    
+    autosleep = int(data.getData("autosleep"))
+    language = data.getData("language")
+
+Thread_getData = app_getDataThread()
 
 def text_object(text, weight, size, alpha):
     def text_objects(text, font):
@@ -166,16 +246,42 @@ class Box_container():
         
         return self.surface, (posx, posy, 0, 0)
 
-Running = True
-
 
 
 def initialize():
+    
+    rgb.init()
+    
+    Thread_getData.start()
+    
     return 0
+ 
+def buttonStatus():
+    if(rgb.GPIO.input(rgb.GPIO_BUTTON) == False):
+        rgb.RGB_on()
+    else:
+        screen.fill(black)
+        rgb.RGB_off()
 
 def app_loop():
     global Running
     
+    # Show Loading screen
+    screen.fill(black)
+    
+    widget_init = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+    widget_init.add_surface(text_object("Laddar...", "Thin", 60, 255))
+    
+    widget_init.set_anchor(Box_container.C)
+    widget_init.set_padding(0, 0)
+    
+    widget, pos = widget_init.draw()
+    
+    screen.blit(widget, pos)
+    
+    pygame.display.update()
+    
+    # Initialize
     initialize()
     
     while Running:
@@ -186,9 +292,9 @@ def app_loop():
         
         # Widget Date Time
         widget_DateTime = Box_container(True, screen.get_width(), 0)
-        widget_DateTime.add_surface(text_object("Måndag", "Ultralight", 60, 255))
-        widget_DateTime.add_surface(text_object("September 05, 2018", "Thin", 60, 255))
-        widget_DateTime.add_surface(text_object("04:20", "Ultralight", 120, 255))
+        widget_DateTime.add_surface(text_object(time.strftime("%A").capitalize(), "Ultralight", 60, 255))
+        widget_DateTime.add_surface(text_object(time.strftime("%B %d, %Y").capitalize(), "Thin", 60, 255))
+        widget_DateTime.add_surface(text_object(time.strftime("%H:%M"), "Ultralight", 120, 255))
         
         widget_DateTime.set_justify(Box_container.RIGHT)
         widget_DateTime.set_anchor(Box_container.NE)
@@ -198,9 +304,20 @@ def app_loop():
         
         screen.blit(widget, pos)
         
+        # Prettiest of them all
+        widget_pota = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        widget_pota.add_surface(text_object("Nikki", "Thin", 82, 255))
+        
+        widget_pota.set_anchor(Box_container.C)
+        widget_pota.set_padding(0, 0)
+        
+        widget, pos = widget_pota.draw()
+        
+        screen.blit(widget, pos)
+        
         # Widget South text
         widget_southtext = Box_container(True, screen.get_width() /2, screen.get_height())
-        widget_southtext.add_surface(text_object("Godmorgon Omi!", "Thin", 60, 255))
+        widget_southtext.add_surface(text_object("GODMORGON ÅMI", "Thin", 60, 255))
         
         widget_southtext.set_anchor(Box_container.S)
         widget_southtext.set_padding(0, 20)
@@ -208,219 +325,13 @@ def app_loop():
         widget, pos = widget_southtext.draw()
         
         screen.blit(widget, pos)
-        
-        # Widget Weather
-        widget_Weather = Box_container(False, 0, 0)
-        
-        ## Left part
-        widget_W_Left = Box_container(True, 0, 0)
-        
-        ### Big Icon & Text
-        widget_W_IconText = Box_container(True, 0, 0)
-        try:
-            widget_W_IconText.add_surface(pygame.image.load('images/weather_1.png'))
             
-        except Exception:
-            print("lol")
-        widget_W_IconText.add_surface(text_object("Lätt Regn", "Regular", 30, 255))
-        
-        ### Other Days Forecast
-        widget_W_otherdays = Box_container(True, 0, 0)
-        
-        #### Other day Widget
-        widget_W_otherday_item = Box_container(False, 0, 0)
-        widget_W_otherday_item.add_surface(text_object("Ons", "Thin", 28, 255))
-        widget_W_otherday_item.add_surface(text_object("Icon", "Thin", 28, 255))
-        widget, pos = widget_W_otherday_item.draw()
-        widget_W_otherdays.add_surface(widget)
-        
-        widget_W_otherday_item = Box_container(False, 0, 0)
-        widget_W_otherday_item.add_surface(text_object("Tors", "Thin", 28, 255))
-        widget_W_otherday_item.add_surface(text_object("Icon", "Thin", 28, 255))
-        widget, pos = widget_W_otherday_item.draw()
-        widget_W_otherdays.add_surface(widget)
-        
-        widget_W_otherday_item = Box_container(False, 0, 0)
-        widget_W_otherday_item.add_surface(text_object("Fre", "Thin", 28, 255))
-        widget_W_otherday_item.add_surface(text_object("Icon", "Thin", 28, 255))
-        widget, pos = widget_W_otherday_item.draw()
-        widget_W_otherdays.add_surface(widget)
-        
-        widget_W_otherday_item = Box_container(False, 0, 0)
-        widget_W_otherday_item.add_surface(text_object("Lör", "Thin", 28, 255))
-        widget_W_otherday_item.add_surface(text_object("Icon", "Thin", 28, 255))
-        widget, pos = widget_W_otherday_item.draw()
-        widget_W_otherdays.add_surface(widget)
-        
-        
-        widget, pos = widget_W_IconText.draw()
-        widget_W_Left.add_surface(widget)
-        widget, pos = widget_W_otherdays.draw()
-        widget_W_Left.add_surface(widget)
-        
-        widget, pos = widget_W_Left.draw()
-        widget_Weather.add_surface(widget)
-        
-        ## Right
-        widget_W_Right = Box_container(True, 0, 0)
-        widget_W_Right.add_surface(text_object("Växjö", "Ultralight", 60, 255))
-        widget_W_Right.add_surface(text_object("72°", "Light", 84, 255))
-        
-        ### Two temp 
-        widget_W_Twotemp = Box_container(False, 0 ,0)
-        widget_W_Twotemp.add_surface(text_object("72", "Light", 28, 255))
-        widget_W_Twotemp.add_surface(text_object("70", "Thin", 28, 255))
-        widget, pos = widget_W_Twotemp.draw()
-        widget_W_Right.add_surface(widget)
-        
-        widget_W_Twotemp = Box_container(False, 0 ,0)
-        widget_W_Twotemp.add_surface(text_object("72", "Light", 28, 255))
-        widget_W_Twotemp.add_surface(text_object("70", "Thin", 28, 255))
-        widget, pos = widget_W_Twotemp.draw()
-        widget_W_Right.add_surface(widget)
-        
-        widget_W_Twotemp = Box_container(False, 0 ,0)
-        widget_W_Twotemp.add_surface(text_object("72", "Light", 28, 255))
-        widget_W_Twotemp.add_surface(text_object("70", "Thin", 28, 255))
-        widget, pos = widget_W_Twotemp.draw()
-        widget_W_Right.add_surface(widget)
-        
-        widget_W_Twotemp = Box_container(False, 0 ,0)
-        widget_W_Twotemp.add_surface(text_object("72", "Light", 28, 255))
-        widget_W_Twotemp.add_surface(text_object("70", "Thin", 28, 255))
-        widget, pos = widget_W_Twotemp.draw()
-        widget_W_Right.add_surface(widget)
-       
-        widget_W_Right.set_padding(0, 300)
-        widget, pos = widget_W_Right.draw()
-        widget_Weather.add_surface(widget)
-
-        widget_Weather.set_anchor(Box_container.NW)
-        widget_Weather.set_padding(10, 10)
-        
-        widget, pos = widget_Weather.draw()
-        
-        screen.blit(widget, pos)
-        
-        # Widget Aftonbladet
-        widget_Aftonbladet = Box_container(True, 0, 0)
-        widget_Aftonbladet.add_surface(text_object("Aftonbladet", "Thin", 30, 255))
-        
-        widget_Aftonbladet_line = pygame.Surface((200, 1))
-        widget_Aftonbladet_line.fill(white)
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_line)
-        
-        widget_Aftonbladet_item = Box_container(False, 0,0)
-        widget_Aftonbladet_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aftonbladet_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aftonbladet_item.set_alpha(255)
-        widget, pos = widget_Aftonbladet_item.draw()
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_item)
-        
-        widget_Aftonbladet_item = Box_container(False, 0,0)
-        widget_Aftonbladet_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aftonbladet_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aftonbladet_item.set_alpha(204)
-        widget, pos = widget_Aftonbladet_item.draw()
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_item)
-        
-        widget_Aftonbladet_item = Box_container(False, 0,0)
-        widget_Aftonbladet_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aftonbladet_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aftonbladet_item.set_alpha(153)
-        widget, pos = widget_Aftonbladet_item.draw()
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_item)
-        
-        widget_Aftonbladet_item = Box_container(False, 0,0)
-        widget_Aftonbladet_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aftonbladet_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aftonbladet_item.set_alpha(102)
-        widget, pos = widget_Aftonbladet_item.draw()
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_item)
-        
-        widget_Aftonbladet_item = Box_container(False, 0,0)
-        widget_Aftonbladet_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aftonbladet_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aftonbladet_item.set_alpha(51)
-        widget, pos = widget_Aftonbladet_item.draw()
-        widget_Aftonbladet.add_surface(widget_Aftonbladet_item)
-
-        widget_Aftonbladet.set_justify(Box_container.RIGHT)
-        
-        # Widget Aktiviteter
-        widget_Aktiviteter = Box_container(True, 0, 0)
-        widget_Aktiviteter.add_surface(text_object("Aktiviteter", "Thin", 30, 255))
-        
-        
-        widget_Aktiviteter_line = pygame.Surface((200, 1))
-        widget_Aktiviteter_line.fill(white)
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_line)
-        
-        widget_Aktiviteter_item = Box_container(False, 0,0)
-        widget_Aktiviteter_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aktiviteter_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aktiviteter_item.set_alpha(255)
-        widget, pos = widget_Aktiviteter_item.draw()
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_item)
-        
-        widget_Aktiviteter_item = Box_container(False, 0,0)
-        widget_Aktiviteter_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aktiviteter_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aktiviteter_item.set_alpha(204)
-        widget, pos = widget_Aktiviteter_item.draw()
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_item)
-        
-        widget_Aktiviteter_item = Box_container(False, 0,0)
-        widget_Aktiviteter_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aktiviteter_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aktiviteter_item.set_alpha(153)
-        widget, pos = widget_Aktiviteter_item.draw()
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_item)
-        
-        widget_Aktiviteter_item = Box_container(False, 0,0)
-        widget_Aktiviteter_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aktiviteter_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aktiviteter_item.set_alpha(102)
-        widget, pos = widget_Aktiviteter_item.draw()
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_item)
-        
-        widget_Aktiviteter_item = Box_container(False, 0,0)
-        widget_Aktiviteter_item.add_surface(text_object("Ons 04:22", "Light", 14, 255))
-        widget_Aktiviteter_item.add_surface(text_object("Anklagelserna växer: Ytterligare en kvinna a...", "Thin", 14, 255))
-        widget_Aktiviteter_item.set_alpha(51)
-        widget, pos = widget_Aktiviteter_item.draw()
-        widget_Aktiviteter.add_surface(widget_Aktiviteter_item)
-
-        widget_Aktiviteter.set_justify(Box_container.RIGHT)
-        
-        # Widget bottom_right
-        widget_bottomright = Box_container(True, screen.get_width(), screen.get_height())
-        
-        widget, pos = widget_Aftonbladet.draw()
-        widget_bottomright.add_surface(widget_Aftonbladet)
-        
-        widget, pos = widget_Aktiviteter.draw()
-        widget_bottomright.add_surface(widget_Aktiviteter)
-        
-        widget_bottomright.set_anchor(Box_container.SE)
-        widget_bottomright.set_padding(10, 10)
-        
-        widget, pos = widget_bottomright.draw()
-        
-        screen.blit(widget, pos)
-        
-        
-        
-        # RGB
-        if(rgb.GPIO.input(rgb.GPIO_BUTTON) == False):
-            rgb.RGB_on()
-        else:
-            screen.fill(black)
-            rgb.RGB_off()
+        # BUTTON status
+        buttonStatus()
         
         pygame.display.update()
         
-        # End gui
+        # End gui - DEBUGMODE
         for event in pygame.event.get():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
@@ -433,10 +344,6 @@ def app_loop():
 
 # start app
 app_loop()
-
-# Start Threads
-app_getData()
-app_updateInfo()
 
 # Reset GPIO inputs
 rgb.RGB_off()

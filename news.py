@@ -9,6 +9,14 @@ updated = False
 
 newsArray = {}
 
+def setRSS(rss):
+    global news_rss
+    news_rss = rss
+
+def setMax(max):
+    global news_max
+    news_max = max
+
 def news_Parse():
     global updated, newsArray
     newsParser = feedparser.parse(news_rss)

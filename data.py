@@ -33,7 +33,3 @@ def writeData():
 
 def getData(key):
     return dataArray[key]
-
-
-# initialize with a data read
-readData()

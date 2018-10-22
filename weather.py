@@ -8,9 +8,17 @@ owm = pyowm.OWM("681a848abbfde6c9da084c5e86d2a6f2")
 # Set location, default Växjö, SE
 observation = owm.three_hours_forecast("Växjö,SE")
 
+cord_x = 0
+cord_y = 0
+api = "681a848abbfde6c9da084c5e86d2a6f2"
+
 # Get forecast
 observationArray = {}
 forecastArray = {}
+
+def setApi(api):
+    global owm
+    owm = pyowm.OWM(api)
 
 def setObservation(obs):
     global observation

@@ -14,26 +14,33 @@ import time
 
 # initialize pigpiod
 
-os.system("sudo pigpiod")
-time.sleep(2) # sleep 2 seconds before executing rest of program, let pigpiod initialize
 
 import pigpio
 import threading
 
 bright = 255
 
-pi = pigpio.pi()
+pi = None
 
-def setLights(pin, brightness):
-	realBrightness = int(int(brightness) * (float(bright) / 255.0))
-	pi.set_PWM_dutycycle(pin, realBrightness)
+def init():
+    global pi
+    os.system("sudo pigpiod")
+    time.sleep(2) # sleep 2 seconds before executing rest of program, let pigpiod initialize
+    
+    pi = pigpio.pi()
+    
+    GPIO.setmode(GPIO.BCM)
 
-# GPIO Setup
-GPIO.setmode(GPIO.BCM)
+    GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    GPIO.setup(GPIO_SENSOR_1, GPIO.IN)
+    GPIO.setup(GPIO_SENSOR_2, GPIO.IN)
 
-GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(GPIO_SENSOR_1, GPIO.IN)
-GPIO.setup(GPIO_SENSOR_2, GPIO.IN)
+
+
+## Mode 0 = One color
+## Mode 1 = Flash
+## Mode 2 = Cycle
+mode = 2
 
 # Preset values
 colour = (255, 0, 0)
@@ -47,9 +54,9 @@ rgb_active = False
 
 app_active = True
 
-# RGB cycle
-def RGB_Cycle():
-    return 0
+def setLights(pin, brightness):
+	realBrightness = int(int(brightness) * (float(bright) / 255.0))
+	pi.set_PWM_dutycycle(pin, realBrightness)
 
 # RGB Single
 def RGB_Single():
@@ -164,24 +171,3 @@ def RGB_on():
             if not cycle_active:
                 Thread_RGB_Cycle= RGB_Cycle()
                 Thread_RGB_Cycle.start()
-                
-## Mode 0 = One color
-## Mode 1 = Flash
-## Mode 2 = Cycle
-        
-mode = 2
-
-def main():
-    if(GPIO.input(GPIO_BUTTON) == False):
-        RGB_on()
-    else:
-        RGB_off()
-
-# start threads
-if __name__ == '__main__':
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("Interrupted")
-        
-        
