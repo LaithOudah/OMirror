@@ -18,6 +18,7 @@ wifi_ssid = ""
 language = ""
 
 autosleep = 0
+autosleeping = True
 
 ## Init
 pygame.init()
@@ -25,8 +26,8 @@ pygame.font.init()
 
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
-#screen = pygame.display.set_mode((500, 500))
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1200, 1000))
+# screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
 icon = pygame.image.load('images/icon.png')
@@ -43,6 +44,7 @@ class app_getDataThread (threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
     def run(self):
+        global internetConnection
         while True:
             if(Running == False):
                 break
@@ -52,11 +54,29 @@ class app_getDataThread (threading.Thread):
             
             # Check internet connection
             internetConnection = checkConnection()
+
+
+class app_getInfoThread (threading.Thread):
+    def __init__(self):
+        threading.Thread.__init__(self)
+    def run(self):
+        while True:
+            if(Running == False):
+                break
             
             if internetConnection:
-                news.news_Parse()
-                weather.updateAll()
-
+                try:
+                    news.news_Parse()
+                    weather.updateAll()
+                except Exception:
+                    # Ignore all exceptions
+                    pass
+            else:
+                # load from cache
+                news.getJSON()
+                weather.getJSON()
+            
+            time.sleep(1)
 
 # check connection
 def checkConnection():
@@ -101,6 +121,7 @@ def checkData():
     language = data.getData("language")
 
 Thread_getData = app_getDataThread()
+Thread_getInfo = app_getInfoThread()
 
 def text_object(text, weight, size, alpha):
     def text_objects(text, font):
@@ -253,6 +274,7 @@ def initialize():
     rgb.init()
     
     Thread_getData.start()
+    Thread_getInfo.start()
     
     return 0
  
@@ -306,7 +328,7 @@ def app_loop():
         
         # Prettiest of them all
         widget_pota = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        widget_pota.add_surface(text_object("Nikki", "Thin", 82, 255))
+        widget_pota.add_surface(text_object(name, "Thin", 82, 255))
         
         widget_pota.set_anchor(Box_container.C)
         widget_pota.set_padding(0, 0)
@@ -317,7 +339,7 @@ def app_loop():
         
         # Widget South text
         widget_southtext = Box_container(True, screen.get_width() /2, screen.get_height())
-        widget_southtext.add_surface(text_object("GODMORGON ÅMI", "Thin", 60, 255))
+        widget_southtext.add_surface(text_object("Text from file", "Thin", 60, 255))
         
         widget_southtext.set_anchor(Box_container.S)
         widget_southtext.set_padding(0, 20)
@@ -325,7 +347,127 @@ def app_loop():
         widget, pos = widget_southtext.draw()
         
         screen.blit(widget, pos)
-            
+        
+        # Weather
+        weather = pygame.Surface((700,400))
+        
+        
+        weather_status = text_object("Molnigt", "Regular", 30, 255)
+        weather.blit(weather_status, (100, 230, 0, 0))
+        
+        weather_status_image = pygame.image.load('images/weather_1_big.png')
+        weather.blit(weather_status_image, (0,0,0,0))
+        
+        weather_location_image = pygame.image.load('images/location.png')
+        weather.blit(weather_location_image, (250,0,0,0))
+        
+        weather_location = text_object("Växjö", "Ultralight", 60, 255)
+        weather.blit(weather_location, (295, -5,0,0))
+        
+        weather_location = text_object("72°", "Light", 84, 255)
+        weather.blit(weather_location, (295, 60 ,0,0))
+        
+        # One item
+        weather_location = text_object("+0", "Light", 28, 255)
+        weather.blit(weather_location, (250, 144 ,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (295 + 84, 144 ,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (295 + 84 + 40, 145 ,0,0))
+        
+        # One item
+        weather_location = text_object("+3", "Light", 28, 255)
+        weather.blit(weather_location, (250, 144 + 30 ,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (295 + 84, 144 + 30 ,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (295 + 84 + 40, 145 + 30,0,0))
+        
+        # One item
+        weather_location = text_object("+6", "Light", 28, 255)
+        weather.blit(weather_location, (250, 144 + 30*2 ,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (295 + 84, 144 + 30*2 ,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (295 + 84 + 40, 145 + 30*2 ,0,0))
+        
+        # One item
+        weather_location = text_object("+9", "Light", 28, 255)
+        weather.blit(weather_location, (250, 144 + 30*3 ,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (295 + 84, 144 + 30*3 ,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (295 + 84 + 40, 145 + 30*3 ,0,0))
+        
+        # Other days
+        # One item
+        weather_location = text_object("Mån", "Light", 28, 255)
+        weather.blit(weather_location, (0, 275 ,0,0))
+        
+        weather_location = pygame.image.load('images/weather_1_small.png')
+        weather.blit(weather_location, (250/2, 275 - 8 ,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (250, 275 ,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (250 + 40, 276 ,0,0))
+        
+        # One item
+        weather_location = text_object("Tis", "Light", 28, 255)
+        weather.blit(weather_location, (0, 275 + 30 ,0,0))
+        
+        weather_location = pygame.image.load('images/weather_1_small.png')
+        weather.blit(weather_location, (250/2, 275 - 8  + 30,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (250, 275  + 30,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (250 + 40, 276  + 30 ,0,0))
+        
+        # One item
+        weather_location = text_object("Ons", "Light", 28, 255)
+        weather.blit(weather_location, (0, 275 + 30*2,0,0))
+        
+        weather_location = pygame.image.load('images/weather_1_small.png')
+        weather.blit(weather_location, (250/2, 275 - 8  + 30*2,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (250, 275  + 30*2,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (250 + 40, 276  + 30*2,0,0))
+        
+        # One item
+        weather_location = text_object("Tors", "Light", 28, 255)
+        weather.blit(weather_location, (0, 275 + 30*3,0,0))
+        
+        weather_location = pygame.image.load('images/weather_1_small.png')
+        weather.blit(weather_location, (250/2, 275 - 8  + 30*3,0,0))
+        
+        weather_location = text_object("72", "Light", 28, 255)
+        weather.blit(weather_location, (250, 275  + 30*3,0,0))
+        
+        weather_location = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_location, (250 + 40, 276  + 30*3,0,0))
+        
+        screen.blit(weather, (25, 25, 0 , 0))
+        
+        # Nyheter
+        nyheter = pygame.Surface((250, 250))
+        nyheter.blit(text_object("Nyheter", "Thin", 32, 255), (0, 0,0,0))
+        
+        screen.blit(nyheter, (screen.get_width()- 250, screen.get_height() - 250, 0 , 0))
+        
         # BUTTON status
         buttonStatus()
         

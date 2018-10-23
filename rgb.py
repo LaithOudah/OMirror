@@ -2,9 +2,15 @@
 GPIO_R = 17
 GPIO_G = 27
 GPIO_B = 22
+
 GPIO_BUTTON = 18
-GPIO_SENSOR_1 = 23
-GPIO_SENSOR_2 = 24
+GPIO_BUTTON_2 = 19
+
+GPIO_WIFI_R = 16
+GPIO_WIFI_G = 20
+GPIO_WIFI_B = 21
+
+GPIO_BLUETOOTH = 26
 
 # Imports
 import RPi.GPIO as GPIO
@@ -32,8 +38,6 @@ def init():
     GPIO.setmode(GPIO.BCM)
 
     GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    GPIO.setup(GPIO_SENSOR_1, GPIO.IN)
-    GPIO.setup(GPIO_SENSOR_2, GPIO.IN)
 
 
 

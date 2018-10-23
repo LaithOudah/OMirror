@@ -1,4 +1,5 @@
 import feedparser
+import json
 
 # rss link
 news_rss = "http://www.aftonbladet.se/nyheter/rss.xml"
@@ -29,12 +30,30 @@ def news_Parse():
                 updated = True
         except Exception:
             updated = False
-        newsArray[i] = (post.title, post.published)
+
+        newsArray[i] = {'id': i, 'title': post.title, 'date': post.published}
         
         # Break
         i += 1
         if i == news_max:
             break
+
+    # save cached version
+    saveJSON()
+
+def saveJSON():
+    with open('cached/news.json', 'w') as outfile:
+        json.dump(newsArray, outfile)
+
+def getJSON():
+    with open('cached/news.json') as infile:
+        json_data = infile.read()
+        if json_data != "":
+            t = json.loads(json_data)
+            for element in t:
+                newsArray[int(element)] = t[element]
+        
+        
 
 def newsUpdated():
     if updated:

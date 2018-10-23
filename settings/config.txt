@@ -13,3 +13,4 @@ news_rss=http://www.aftonbladet.se/nyheter/rss.xml
 news_max=5
 wifi_ssid=
 name=Omar
+rotation=0
