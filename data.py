@@ -15,17 +15,21 @@ def readData():
 def setData(key, value):
     try:
         dataArray[key] = value
+        
+        writeData()
         return 1
     except IndexError:
         return 0
 
 def addNewData(key, value):
     dataArray[key] = value
+    
+    writeData()
 
 def writeData():
     file = open(fileName, "w")
     
-    for k, v in dataArray.iteritems():
+    for k, v in dataArray.items():
         string = "%s=%s\n" % (k, v)
         file.write(string)
 

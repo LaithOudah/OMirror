@@ -4,12 +4,14 @@ import pyowm
 import json
 
 # set API
-owm = pyowm.OWM("681a848abbfde6c9da084c5e86d2a6f2")
+owm = None
 
 # Set location, default Växjö, SE
 loc = "Växjö,SE";
 
-observation = owm.three_hours_forecast(loc)
+observation = None
+
+owmSET = False
 
 cord_x = 0
 cord_y = 0
@@ -18,6 +20,17 @@ api = "681a848abbfde6c9da084c5e86d2a6f2"
 # Get forecast
 observationArray = {}
 forecastArray = {}
+
+def init():
+    global owm, observation
+    try:
+        owm = pyowm.OWM(api)
+        
+        observation = owm.three_hours_forecast(loc)
+        
+        owmSET = True
+    except Exception:
+        owmSET = False
 
 def setApi(api):
     global owm

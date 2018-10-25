@@ -4,11 +4,11 @@ GPIO_G = 27
 GPIO_B = 22
 
 GPIO_BUTTON = 18
-GPIO_BUTTON_2 = 19
+GPIO_BUTTON_2 = 23
 
-GPIO_WIFI_R = 16
-GPIO_WIFI_G = 20
-GPIO_WIFI_B = 21
+GPIO_WIFI_R = 5
+GPIO_WIFI_G = 6
+GPIO_WIFI_B = 13
 
 GPIO_BLUETOOTH = 26
 
@@ -35,9 +35,17 @@ def init():
     
     pi = pigpio.pi()
     
+    GPIO.cleanup()
+    
     GPIO.setmode(GPIO.BCM)
 
     GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+        
+    GPIO.setup(GPIO_BLUETOOTH, GPIO.OUT)
+    GPIO.setup(GPIO_WIFI_R, GPIO.OUT)
+    GPIO.setup(GPIO_WIFI_G, GPIO.OUT)
+    GPIO.setup(GPIO_WIFI_B, GPIO.OUT)
+    GPIO.setup(GPIO_BUTTON_2, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
 
 
@@ -175,3 +183,16 @@ def RGB_on():
             if not cycle_active:
                 Thread_RGB_Cycle= RGB_Cycle()
                 Thread_RGB_Cycle.start()
+
+def bluetooth_led(val):
+    GPIO.output(GPIO_BLUETOOTH, val)
+
+def wifi_led(val):
+    if val:
+        GPIO.output(GPIO_WIFI_R, 0)
+        GPIO.output(GPIO_WIFI_G, 1)
+        GPIO.output(GPIO_WIFI_B, 0)
+    else:
+        GPIO.output(GPIO_WIFI_R, 1)
+        GPIO.output(GPIO_WIFI_G, 0)
+        GPIO.output(GPIO_WIFI_B, 0)

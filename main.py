@@ -16,6 +16,9 @@ bluetooth_name = ""
 wifi_pass = ""
 wifi_ssid = ""
 language = ""
+rotation = 0
+
+rotation_buttonpressed = True
 
 autosleep = 0
 autosleeping = True
@@ -54,6 +57,13 @@ class app_getDataThread (threading.Thread):
             
             # Check internet connection
             internetConnection = checkConnection()
+            
+            if internetConnection:
+                rgb.wifi_led(1)
+                if not weather.owmSET:
+                    weather.init()
+            else:
+                rgb.wifi_led(0)
 
 
 class app_getInfoThread (threading.Thread):
@@ -89,7 +99,7 @@ def checkConnection():
 
 # Check data
 def checkData():
-    global name,bluetooth_name, wifi_ssid, wifi_pass, autosleep, language
+    global name,bluetooth_name, wifi_ssid, wifi_pass, autosleep, language, rotation
     
     cc = data.getData("rgb_single").split(",")
     rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
@@ -104,6 +114,8 @@ def checkData():
     rgb.flash_sequence = fs
     rgb.flash_delay = float(data.getData("rgb_flash_delay"))
     rgb.mode = int(data.getData("rgb_mode"))
+    
+    rotation = int(data.getData("rotation"))
     
     weather.cord_x = float(data.getData("weather_cord_x"))
     weather.cord_y = float(data.getData("weather_cord_y"))
@@ -271,6 +283,7 @@ class Box_container():
 
 def initialize():
     
+    weather.init()
     rgb.init()
     
     Thread_getData.start()
@@ -279,11 +292,25 @@ def initialize():
     return 0
  
 def buttonStatus():
+    global rotation_buttonpressed, rotation
+    
     if(rgb.GPIO.input(rgb.GPIO_BUTTON) == False):
         rgb.RGB_on()
     else:
         screen.fill(black)
         rgb.RGB_off()
+    
+    if not (rgb.GPIO.input(rgb.GPIO_BUTTON_2)):
+        if not rotation_buttonpressed:
+            rotation_buttonpressed = True
+            if rotation == 3:
+                rotation = 0
+            else:
+                rotation += 1
+            data.setData("rotation", rotation)
+            print(rotation)
+    else:
+        rotation_buttonpressed = False
 
 def app_loop():
     global Running
@@ -368,44 +395,16 @@ def app_loop():
         weather.blit(weather_location, (295, 60 ,0,0))
         
         # One item
-        weather_location = text_object("+0", "Light", 28, 255)
-        weather.blit(weather_location, (250, 144 ,0,0))
+        weather_max_0 = text_object("72", "Light", 28, 255)
+        weather.blit(weather_max_0, (255, 145 ,0,0))
+        weather_min_0 = text_object("65", "Thin", 28, 255)
+        weather.blit(weather_min_0, (255, 176 ,0,0))
+        width = 0;
+        if weather_max_0.get_width() > weather_min_0.get_width():
+            width = weather_max_0.get_width()
+        else:
+            width = weather_min_0.get_width()
         
-        weather_location = text_object("72", "Light", 28, 255)
-        weather.blit(weather_location, (295 + 84, 144 ,0,0))
-        
-        weather_location = text_object("65", "Thin", 28, 255)
-        weather.blit(weather_location, (295 + 84 + 40, 145 ,0,0))
-        
-        # One item
-        weather_location = text_object("+3", "Light", 28, 255)
-        weather.blit(weather_location, (250, 144 + 30 ,0,0))
-        
-        weather_location = text_object("72", "Light", 28, 255)
-        weather.blit(weather_location, (295 + 84, 144 + 30 ,0,0))
-        
-        weather_location = text_object("65", "Thin", 28, 255)
-        weather.blit(weather_location, (295 + 84 + 40, 145 + 30,0,0))
-        
-        # One item
-        weather_location = text_object("+6", "Light", 28, 255)
-        weather.blit(weather_location, (250, 144 + 30*2 ,0,0))
-        
-        weather_location = text_object("72", "Light", 28, 255)
-        weather.blit(weather_location, (295 + 84, 144 + 30*2 ,0,0))
-        
-        weather_location = text_object("65", "Thin", 28, 255)
-        weather.blit(weather_location, (295 + 84 + 40, 145 + 30*2 ,0,0))
-        
-        # One item
-        weather_location = text_object("+9", "Light", 28, 255)
-        weather.blit(weather_location, (250, 144 + 30*3 ,0,0))
-        
-        weather_location = text_object("72", "Light", 28, 255)
-        weather.blit(weather_location, (295 + 84, 144 + 30*3 ,0,0))
-        
-        weather_location = text_object("65", "Thin", 28, 255)
-        weather.blit(weather_location, (295 + 84 + 40, 145 + 30*3 ,0,0))
         
         # Other days
         # One item
