@@ -6,6 +6,7 @@ import rgb # RGB
 import sys, pygame # GUI
 import news, weather # News & Weather
 import threading, socket
+import glob
 
 # variables
 Running = True
@@ -27,13 +28,23 @@ autosleeping = True
 pygame.init()
 pygame.font.init()
 
+cached_Images = {}
+
+def cache_Images():
+    print("Loaded images:")
+    for item in glob.glob('images/*.png'):
+        name = item.split('/', 1)[1]
+        name = name.split('.', 1)[0]
+        cached_Images[name] = pygame.image.load(item)
+        print(item)
+
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
 screen = pygame.display.set_mode((1200, 1000))
 # screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
-icon = pygame.image.load('images/icon.png')
+icon = pygame.image.load('images/icon.png').convert()
 pygame.display.set_icon(icon)
 
 clock = pygame.time.Clock()
@@ -289,6 +300,7 @@ class Box_container():
 
 ## INIT
 def initialize():
+    cache_Images()
     
     weather.init()
     rgb.init()
@@ -400,15 +412,15 @@ class weather_Object(widget):
     def __init__(self, alpha):
         widget.__init__(self, alpha)
     def update(self):
-        self.surface = pygame.Surface((700,400))
+        self.surface = pygame.Surface((700,480))
         
         weather_status = text_object("Molnigt", "Regular", 30, 255)
         self.surface.blit(weather_status, (100, 230, 0, 0))
         
-        weather_status_image = pygame.image.load('images/weather_1_big.png')
+        weather_status_image = cached_Images['weather_1_big']
         self.surface.blit(weather_status_image, (0,0,0,0))
         
-        weather_location_image = pygame.image.load('images/location.png')
+        weather_location_image = cached_Images['location']
         self.surface.blit(weather_location_image, (250,0,0,0))
         
         weather_location = text_object("Växjö", "Ultralight", 60, 255)
@@ -417,12 +429,13 @@ class weather_Object(widget):
         weather_location = text_object("72°", "Light", 84, 255)
         self.surface.blit(weather_location, (295, 60 ,0,0))
         
+        ## NOW + 0, +3, +6 ,+ 9
         # One item
         weather_max_0 = text_object("72", "Light", 28, 255)
         self.surface.blit(weather_max_0, (255, 145 ,0,0))
         weather_min_0 = text_object("65", "Thin", 28, 255)
         self.surface.blit(weather_min_0, (255, 176 ,0,0))
-        weather_splitter = pygame.image.load('images/divider_1.png')
+        weather_splitter = cached_Images['divider_1']
         
         width = 0
         gap = 10
@@ -439,7 +452,7 @@ class weather_Object(widget):
         self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
         weather_min_1 = text_object("65", "Thin", 28, 255)
         self.surface.blit(weather_min_1, (255 + width, 176,0,0))
-        weather_splitter = pygame.image.load('images/divider_1.png')
+        weather_splitter = cached_Images['divider_1']
         
         if weather_max_1.get_width() > weather_min_1.get_width():
             width += weather_max_1.get_width()
@@ -454,7 +467,7 @@ class weather_Object(widget):
         self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
         weather_min_1 = text_object("65", "Thin", 28, 255)
         self.surface.blit(weather_min_1, (255 + width, 176,0,0))
-        weather_splitter = pygame.image.load('images/divider_1.png')
+        weather_splitter = cached_Images['divider_1']
         
         if weather_max_1.get_width() > weather_min_1.get_width():
             width += weather_max_1.get_width()
@@ -469,7 +482,84 @@ class weather_Object(widget):
         self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
         weather_min_1 = text_object("65", "Thin", 28, 255)
         self.surface.blit(weather_min_1, (255 + width, 176,0,0))
-              
+        
+        # Sun rise & Sun down
+        
+        
+        ## Other days
+        # One item
+        height = 250 + weather_status.get_height()
+        
+        weather_day = text_object("Mån", "Regular", 28, 255)
+        self.surface.blit(weather_day, (0, height,0,0))
+        
+        img = cached_Images["weather_1_small"]
+        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
+
+        weather_min_0 = text_object("65", "Thin", 28, 255)
+        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
+        
+        weather_max_0 = text_object("72", "Light", 28, 255)
+        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        
+        height += weather_day.get_height() + 3
+        
+        img = cached_Images["line_2"]
+        self.surface.blit(img, (0, height))
+        height += 3
+        
+        #One item
+        weather_day = text_object("Tis", "Regular", 28, 255)
+        self.surface.blit(weather_day, (0, height,0,0))
+        
+        img = cached_Images["weather_1_small"]
+        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
+
+        weather_min_0 = text_object("65", "Thin", 28, 255)
+        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
+        
+        weather_max_0 = text_object("72", "Light", 28, 255)
+        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        
+        height += weather_day.get_height() + 3
+        
+        img = cached_Images["line_2"]
+        self.surface.blit(img, (0, height))
+        height += 3
+        
+        #One item
+        weather_day = text_object("Ons", "Regular", 28, 255)
+        self.surface.blit(weather_day, (0, height,0,0))
+        
+        img = cached_Images["weather_1_small"]
+        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
+
+        weather_min_0 = text_object("65", "Thin", 28, 255)
+        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
+        
+        weather_max_0 = text_object("72", "Light", 28, 255)
+        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        
+        height += weather_day.get_height() + 3
+        
+        img = cached_Images["line_2"]
+        self.surface.blit(img, (0, height))
+        height += 3
+        
+        #One item
+        weather_day = text_object("Tors", "Regular", 28, 255)
+        self.surface.blit(weather_day, (0, height,0,0))
+        
+        img = cached_Images["weather_1_small"]
+        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
+
+        weather_min_0 = text_object("65", "Thin", 28, 255)
+        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
+        
+        weather_max_0 = text_object("72", "Light", 28, 255)
+        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        
+        
         self.surface.set_alpha(self.alpha)
         
         # rotate
@@ -559,31 +649,38 @@ class quote_Object(widget):
         return self.pos
 
 class dateTime_Object(widget):
-    pos = None
-    
     def __init__(self,alpha):
         widget.__init__(self, alpha)
     def update(self):
-        self.surface = Box_container(True, screen.get_width(), 0)
-        self.surface.add_surface(text_object(time.strftime("%A").capitalize(), "Ultralight", 60, 255))
-        self.surface.add_surface(text_object(time.strftime("%B %d, %Y").capitalize(), "Thin", 60, 255))
-        self.surface.add_surface(text_object(time.strftime("%H:%M"), "Ultralight", 120, 255))
+        self.surface = pygame.Surface((450, 300))
         
-        self.surface.set_justify(Box_container.RIGHT)
-        self.surface.set_anchor(Box_container.NE)
-        self.surface.set_padding(25, 25)
+        text_1 = text_object(time.strftime("%A").capitalize(), "Ultralight", 60, 255)
+        width = self.surface.get_width() - text_1.get_width()
+        height = 0
+        self.surface.blit(text_1, (width,height))
+        height += text_1.get_height()
+        
+        text_2 = text_object(time.strftime("%B %d, %Y").capitalize(), "Thin", 60, 255)
+        width = self.surface.get_width() - text_2.get_width()
+        self.surface.blit(text_2, (width, height))
+        height += text_2.get_height()
+        
+        text_3 = text_object(time.strftime("%S"), "Ultralight", 52, 180)
+        width = self.surface.get_width() - text_3.get_width()
+        self.surface.blit(text_3, (width, height))
+        
+        text_4 = text_object(time.strftime("%H:%M"), "Ultralight", 95, 255)
+        width = self.surface.get_width() - text_1.get_width() - 125
+        
+        self.surface.blit(text_4,(width, height))
+        
+        
 
-        ww, pos = self.surface.draw()
-        self.surface = ww
         
         self.surface.set_alpha(self.alpha)
 
-        self.pos = pos
-        
         # rotate
         widget.rotate(self)
-    def get_pos(self):
-        return self.pos
 
 class loading_Object(widget):
     pos = None
@@ -617,7 +714,7 @@ class nyheter_Object(widget):
         
         header = text_object("Nyheter", "Thin", 32, 255)
         self.surface.blit(header, (self.surface.get_width() - header.get_width(), 0, 0 ,0))
-        self.surface.blit(pygame.image.load("images/line.png"),(0, header.get_height() + 3, 0 ,0))
+        self.surface.blit(cached_Images['line'],(0, header.get_height() + 3, 0 ,0))
         height = header.get_height() + 6
         
         self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
@@ -626,27 +723,27 @@ class nyheter_Object(widget):
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("1m sen", "Thin", 16, 190), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 200)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() +3
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("1m sen", "Thin", 16, 140), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 150)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("1m sen", "Thin", 16, 90), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 100)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("1m sen", "Thin", 16, 40), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 50)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         
         self.surface.set_alpha(self.alpha)
@@ -662,7 +759,7 @@ class aktiviteter_Object(widget):
         
         header = text_object("Aktiviteter", "Thin", 32, 255)
         self.surface.blit(header, (self.surface.get_width() - header.get_width(), 0, 0 ,0))
-        self.surface.blit(pygame.image.load("images/line.png"),(0, header.get_height() + 3, 0 ,0))
+        self.surface.blit(cached_Images['line'],(0, header.get_height() + 3, 0 ,0))
         height = header.get_height() + 6
         
         self.surface.blit(text_object("Nu", "Thin", 16, 240), (0, height, 0, 0))
@@ -671,27 +768,27 @@ class aktiviteter_Object(widget):
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("Om 15m", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("Om 15m", "Thin", 16, 190), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 200)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() +3
         
-        self.surface.blit(text_object("Om 1v", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("Om 1v", "Thin", 16, 140), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 150)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("Om 3v", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("Om 3v", "Thin", 16, 90), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 100)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         height += text.get_height() + 3
         
-        self.surface.blit(text_object("Om 1år", "Thin", 16, 240), (0, height, 0, 0))
+        self.surface.blit(text_object("Om 1år", "Thin", 16, 40), (0, height, 0, 0))
         t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
+        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 50)
         self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
         
         self.surface.set_alpha(self.alpha)
@@ -769,7 +866,7 @@ def app_loop():
         # Draw
         if rotation == 0:
             screen.blit(weather_object.get_surface(), (25, 25, 0 , 0))
-            screen.blit(dateTime_object.get_surface(), dateTime_object.get_pos())
+            screen.blit(dateTime_object.get_surface(), (screen.get_width() - dateTime_object.get_surface().get_width() - 25, 25, 0 , 0))
             screen.blit(pota_object.get_surface(), pota_object.get_pos())
             screen.blit(quote_object.get_surface(), quote_object.get_pos())
             screen.blit(southtext_object.get_surface(), southtext_object.get_pos())
