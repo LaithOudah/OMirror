@@ -7,6 +7,8 @@ import sys, pygame # GUI
 import news, weather # News & Weather
 import threading, socket
 import glob
+import quotes
+# import gifimages
 
 # variables
 Running = True
@@ -18,6 +20,7 @@ wifi_pass = ""
 wifi_ssid = ""
 language = ""
 rotation = 0
+rotated = False
 
 rotation_buttonpressed = True
 
@@ -37,6 +40,13 @@ def cache_Images():
         name = name.split('.', 1)[0]
         cached_Images[name] = pygame.image.load(item)
         print(item)
+    '''
+    for item in glob.glob('images/*.gif'):
+        name = item.split('/', 1)[1]
+        name = name.split('.', 1)[0]
+        cached_Images[name] = gifimages.GIFImage(item)
+        print(item)
+    '''
 
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
@@ -91,6 +101,7 @@ class app_getInfoThread (threading.Thread):
             
             if internetConnection:
                 try:
+                    quotes.get_Data()
                     news.news_Parse()
                     weather.updateAll()
                 except Exception:
@@ -100,6 +111,7 @@ class app_getInfoThread (threading.Thread):
                 # load from cache
                 news.getJSON()
                 weather.getJSON()
+                quotes.getJSON()
             
             time.sleep(1)
 
@@ -312,7 +324,7 @@ def initialize():
 
 ## CHECK BUTTON STATUS
 def buttonStatus():
-    global rotation_buttonpressed, rotation
+    global rotation_buttonpressed, rotation, rotated
     
     if(rgb.GPIO.input(rgb.GPIO_BUTTON) == False):
         rgb.RGB_on()
@@ -328,6 +340,7 @@ def buttonStatus():
             else:
                 rotation += 1
             data.setData("rotation", rotation)
+            rotated = True
     else:
         rotation_buttonpressed = False
 
@@ -484,7 +497,17 @@ class weather_Object(widget):
         self.surface.blit(weather_min_1, (255 + width, 176,0,0))
         
         # Sun rise & Sun down
+        img = cached_Images["sunrise"]
+        self.surface.blit(img, (248, 215))
         
+        weather_sunrise = text_object("06:00", "Light", 26, 255)
+        self.surface.blit(weather_sunrise, (248 + 32, 215))
+        
+        img = cached_Images["sunset"]
+        self.surface.blit(img, (248 + 70 +32, 215))
+        
+        weather_sunrise = text_object("19:32", "Light", 26, 255)
+        self.surface.blit(weather_sunrise, (248 + 70 + 64, 215))
         
         ## Other days
         # One item
@@ -670,9 +693,9 @@ class dateTime_Object(widget):
         self.surface.blit(text_3, (width, height))
         
         text_4 = text_object(time.strftime("%H:%M"), "Ultralight", 95, 255)
-        width = self.surface.get_width() - text_1.get_width() - 125
+        width = self.surface.get_width() - text_1.get_width() - 127
         
-        self.surface.blit(text_4,(width, height))
+        self.surface.blit(text_4,(width, height - 10))
         
         
 
@@ -806,7 +829,7 @@ aktiviteter_object = aktiviteter_Object(0)
 loading_object = loading_Object(255)
 
 def app_loop():
-    global Running
+    global Running, rotated
     
     # Show Loading screen
     screen.fill(black)
@@ -828,11 +851,16 @@ def app_loop():
     # fader.add(0, quote_object, 25, None)
     fader.add(0, aktiviteter_object, 25, None)
     
+    screen.fill(black)
+    
     while Running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: sys.exit()
         
-        screen.fill(black)
+        # rotatetd
+        if rotated:
+            screen.fill(black)
+            rotated = False
         
         # Widget Date Time
         dateTime_object.set_rotation(rotation)

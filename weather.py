@@ -86,12 +86,17 @@ def getForecast():
     for i in range (0, 8):
         temp = observationArray[i].get_temperature('celsius')
         
+        sunrise = observationArray[i].get_sunrise_time()
+        sunset = observationArray[i].get_sunset_time()
+        
         day = observationArray[i].get_reference_time(timeformat='date').strftime("%A").capitalize()
         
         forecastArray[i] = { "status": convertSwedish(observationArray[i].get_status()),
                             "temp": temp["temp"],
                             "temp_max": temp["temp_max"],
                             "temp_min": temp["temp_min"],
+                             "sunrise": sunrise,
+                             "sunset": sunset,
                              "day": day
                             }
     # saved cached version
