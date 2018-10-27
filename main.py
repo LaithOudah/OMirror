@@ -8,7 +8,6 @@ import news, weather # News & Weather
 import threading, socket
 import glob
 import quotes
-# import gifimages
 
 # variables
 Running = True
@@ -40,13 +39,6 @@ def cache_Images():
         name = name.split('.', 1)[0]
         cached_Images[name] = pygame.image.load(item)
         print(item)
-    '''
-    for item in glob.glob('images/*.gif'):
-        name = item.split('/', 1)[1]
-        name = name.split('.', 1)[0]
-        cached_Images[name] = gifimages.GIFImage(item)
-        print(item)
-    '''
 
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
@@ -427,20 +419,17 @@ class weather_Object(widget):
     def update(self):
         self.surface = pygame.Surface((700,480))
         
-        weather_status = text_object("Molnigt", "Regular", 30, 255)
-        self.surface.blit(weather_status, (100, 230, 0, 0))
-        
         weather_status_image = cached_Images['weather_1_big']
         self.surface.blit(weather_status_image, (0,0,0,0))
         
-        weather_location_image = cached_Images['location']
-        self.surface.blit(weather_location_image, (250,0,0,0))
+        weather_status = text_object("Molnigt", "Regular", 30, 255)
+        self.surface.blit(weather_status, (250/2 - weather_status.get_width() / 2, 230, 0, 0))
         
         weather_location = text_object("Växjö", "Ultralight", 60, 255)
-        self.surface.blit(weather_location, (295, -5,0,0))
+        self.surface.blit(weather_location, (250 + 200/2 - weather_location.get_width()/2, -5,0,0))
         
         weather_location = text_object("72°", "Light", 84, 255)
-        self.surface.blit(weather_location, (295, 60 ,0,0))
+        self.surface.blit(weather_location, (250 + 225/2 - weather_location.get_width()/2, 60 ,0,0))
         
         ## NOW + 0, +3, +6 ,+ 9
         # One item
@@ -554,7 +543,7 @@ class weather_Object(widget):
         weather_day = text_object("Ons", "Regular", 28, 255)
         self.surface.blit(weather_day, (0, height,0,0))
         
-        img = cached_Images["weather_1_small"]
+        img = cached_Images["weather_5_small"]
         self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
 
         weather_min_0 = text_object("65", "Thin", 28, 255)
@@ -573,7 +562,7 @@ class weather_Object(widget):
         weather_day = text_object("Tors", "Regular", 28, 255)
         self.surface.blit(weather_day, (0, height,0,0))
         
-        img = cached_Images["weather_1_small"]
+        img = cached_Images["weather_3_small"]
         self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
 
         weather_min_0 = text_object("65", "Thin", 28, 255)
@@ -712,7 +701,7 @@ class loading_Object(widget):
         widget.__init__(self, alpha)
     def update(self):
         self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        self.surface.add_surface(text_object("Laddar...", "Thin", 60, 255))
+        self.surface.add_surface(pygame.image.load("images/logo.png"))
         
         self.surface.set_anchor(Box_container.C)
         self.surface.set_padding(0, 0)
@@ -737,6 +726,7 @@ class nyheter_Object(widget):
         
         header = text_object("Nyheter", "Thin", 32, 255)
         self.surface.blit(header, (self.surface.get_width() - header.get_width(), 0, 0 ,0))
+        
         self.surface.blit(cached_Images['line'],(0, header.get_height() + 3, 0 ,0))
         height = header.get_height() + 6
         
