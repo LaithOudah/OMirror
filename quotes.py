@@ -1,5 +1,6 @@
 import requests
 import json
+import random
 from datetime import datetime, timedelta
 
 # rss link
@@ -9,6 +10,9 @@ api = "https://andruxnet-random-famous-quotes.p.mashape.com/?cat=famous&count=%i
 
 quoteArray = {}
 date = None
+
+def get_randomQuote():
+    return quoteArray[random.randint(0, count_max)]
 
 def get_Data():
     global quoteArray

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-import os, time, locale
+import os, time, locale, datetime
 import data # Data
 import rgb # RGB
 import sys, pygame # GUI
@@ -37,7 +37,7 @@ def cache_Images():
     for item in glob.glob('images/*.png'):
         name = item.split('/', 1)[1]
         name = name.split('.', 1)[0]
-        cached_Images[name] = pygame.image.load(item)
+        cached_Images[name] = pygame.image.load(item).convert()
         print(item)
 
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
@@ -59,6 +59,62 @@ white = 255, 255, 255
 def splitString(string, n):
     return [string[i:i + n] for i in range(0, len(string), n)]
 
+# In ... time
+def inTime(date):
+    datenow = datetime.datetime.now()
+    deltatime = date - datenow
+    
+    seconds = int(deltatime.total_seconds()) 
+    minutes = int(divmod(deltatime.total_seconds(), 60)[0])
+    hours = int(divmod(deltatime.total_seconds(), 60*60)[0])
+    days = int(divmod(deltatime.total_seconds(), 60*60*24)[0])
+    weeks = int(divmod(deltatime.total_seconds(), 60*60*24*7)[0])
+    months = int(divmod(deltatime.total_seconds(), 60*60*24*30)[0])
+    years = int(divmod(deltatime.total_seconds(), 60*60*24*30*12)[0])
+    
+    if years != 0:
+        return ("Om %iy" % years)
+    elif months != 0:
+        return ("Om %iM" % months)
+    elif weeks != 0:
+        return ("Om %iv" % weeks)
+    elif days != 0:
+        return ("Om %id" % days)
+    elif hours != 0:
+        return ("Om %ih" % hours)
+    elif minutes != 0:
+        return ("Om %im" % minutes)
+    elif seconds != 0:
+        return ("Om %is" % seconds)
+
+# For ... time
+def forTime(date):
+    datenow = datetime.datetime.now()
+    deltatime = datenow - date
+    
+    seconds = int(deltatime.total_seconds()) 
+    minutes = int(divmod(deltatime.total_seconds(), 60)[0])
+    hours = int(divmod(deltatime.total_seconds(), 60*60)[0])
+    days = int(divmod(deltatime.total_seconds(), 60*60*24)[0])
+    weeks = int(divmod(deltatime.total_seconds(), 60*60*24*7)[0])
+    months = int(divmod(deltatime.total_seconds(), 60*60*24*30)[0])
+    years = int(divmod(deltatime.total_seconds(), 60*60*24*30*12)[0])
+    
+    if years != 0:
+        return ("%iy sen" % years)
+    elif months != 0:
+        return ("%iM sen" % months)
+    elif weeks != 0:
+        return ("%iv sen" % weeks)
+    elif days != 0:
+        return ("%id sen" % days)
+    elif hours != 0:
+        return ("%ih sen" % hours)
+    elif minutes != 0:
+        return ("%im sen" % minutes)
+    elif seconds != 0:
+        return ("%is sen" % seconds)
+    
 # App get data thread
 class app_getDataThread (threading.Thread):
     def __init__(self):
@@ -414,162 +470,212 @@ class widget():
         return self.surface
 
 class weather_Object(widget):
+    weather_status_image = pygame.Surface((0, 0))
+    weather_status = pygame.Surface((0, 0))
+    
+    weather_location = pygame.Surface((0, 0))
+    weather_temp = pygame.Surface((0, 0))
+    
+    weather_max_0 = pygame.Surface((0, 0))
+    weather_min_0 = pygame.Surface((0, 0))
+    
+    weather_max_1 = pygame.Surface((0, 0))
+    weather_min_1 = pygame.Surface((0, 0))
+    
+    weather_max_2 = pygame.Surface((0, 0))
+    weather_min_2 = pygame.Surface((0, 0))
+    
+    weather_max_3 = pygame.Surface((0, 0))
+    weather_min_3 = pygame.Surface((0, 0))
+    
+    weather_splitter = pygame.Surface((0, 0))
+    line2_img = pygame.Surface((0, 0))
+    
+    sunrise_img = pygame.Surface((0, 0))
+    weather_sunrise = pygame.Surface((0, 0))
+    sunset_img = pygame.Surface((0, 0))
+    weather_sunrise = pygame.Surface((0, 0))
+    
+    weather_day1 = pygame.Surface((0, 0))
+    weather_day1_img = pygame.Surface((0, 0))
+    weather_day1_max = pygame.Surface((0, 0))
+    weather_day1_min = pygame.Surface((0, 0))
+    
+    weather_day2 = pygame.Surface((0, 0))
+    weather_day2_img = pygame.Surface((0, 0))
+    weather_day2_max = pygame.Surface((0, 0))
+    weather_day2_min = pygame.Surface((0, 0))
+    
+    weather_day3 = pygame.Surface((0, 0))
+    weather_day3_img = pygame.Surface((0, 0))
+    weather_day3_max = pygame.Surface((0, 0))
+    weather_day3_min = pygame.Surface((0, 0))
+    
+    weather_day4 = pygame.Surface((0, 0))
+    weather_day4_img = pygame.Surface((0, 0))
+    weather_day4_max = pygame.Surface((0, 0))
+    weather_day4_min = pygame.Surface((0, 0))
+    
     def __init__(self, alpha):
         widget.__init__(self, alpha)
+    def getInfo(self):
+        print(weather.forecastArray[0]["status"])
+        self.weather_status_image = cached_Images[weather.getImage(1, weather.forecastArray[0]["status"])]
+        self.weather_status = text_object(weather.convertSwedish(weather.forecastArray[0]["status"]), "Regular", 30, 255)
+        
+        self.weather_location = text_object(weather.loc.split(",")[0], "Ultralight", 60, 255)
+        self.weather_temp = text_object("%.1f°" % weather.forecastArray[0]["temp"], "Light", 84, 255)
+        
+        self.weather_max_0 = text_object("%.1f°" % weather.forecastArray[0]["temp_max"], "Light", 28, 255)
+        self.weather_min_0 = text_object("%.1f°" % weather.forecastArray[0]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_max_1 = text_object("%.1f°" % weather.forecastArray[1]["temp_max"], "Light", 28, 255)
+        self.weather_min_1 = text_object("%.1f°" % weather.forecastArray[1]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_max_2 = text_object("%.1f°" % weather.forecastArray[2]["temp_max"], "Light", 28, 255)
+        self.weather_min_2 = text_object("%.1f°" % weather.forecastArray[2]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_max_3 = text_object("%.1f°" % weather.forecastArray[3]["temp_max"], "Light", 28, 255)
+        self.weather_min_3 = text_object("%.1f°" % weather.forecastArray[3]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_splitter = cached_Images['divider_1']
+        self.line2_img = cached_Images['line_2']
+        
+        self.sunrise_img = cached_Images["sunrise"]
+        print(weather.forecastArray[0]["sunrise"])
+        self.weather_sunrise = text_object("06:00", "Light", 26, 255)
+        self.sunset_img = cached_Images["sunset"]
+        self.weather_sunrise = text_object("19:32", "Light", 26, 255)
+        
+        self.weather_day1 = text_object(weather.forecastArray[4]["day"][:3], "Regular", 28, 255)
+        self.weather_day1_img = cached_Images[weather.getImage(0, weather.forecastArray[4]["status"])]
+        self.weather_day1_max = text_object("%.1f°" % weather.forecastArray[4]["temp_max"], "Light", 28, 255)
+        self.weather_day1_min = text_object("%.1f°" % weather.forecastArray[4]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_day2 = text_object(weather.forecastArray[5]["day"][:3], "Regular", 28, 255)
+        self.weather_day2_img = cached_Images[weather.getImage(0, weather.forecastArray[5]["status"])]
+        self.weather_day2_max = text_object("%.1f°" % weather.forecastArray[5]["temp_max"], "Light", 28, 255)
+        self.weather_day2_min = text_object("%.1f°" % weather.forecastArray[5]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_day3 = text_object(weather.forecastArray[6]["day"][:3], "Regular", 28, 255)
+        self.weather_day3_img = cached_Images[weather.getImage(0, weather.forecastArray[6]["status"])]
+        self.weather_day3_max = text_object("%.1f°" % weather.forecastArray[6]["temp_max"], "Light", 28, 255)
+        self.weather_day3_min = text_object("%.1f°" % weather.forecastArray[6]["temp_min"], "Thin", 28, 255)
+        
+        self.weather_day4 = text_object(weather.forecastArray[7]["day"][:3], "Regular", 28, 255)
+        self.weather_day4_img = cached_Images[weather.getImage(0, weather.forecastArray[7]["status"])]
+        self.weather_day4_max = text_object("%.1f°" % weather.forecastArray[7]["temp_max"], "Light", 28, 255)
+        self.weather_day4_min = text_object("%.1f°" % weather.forecastArray[7]["temp_min"], "Thin", 28, 255)
+        
     def update(self):
         self.surface = pygame.Surface((700,480))
         
-        weather_status_image = cached_Images['weather_1_big']
-        self.surface.blit(weather_status_image, (0,0,0,0))
+        self.surface.blit(self.weather_status_image, (0,0,0,0))
         
-        weather_status = text_object("Molnigt", "Regular", 30, 255)
-        self.surface.blit(weather_status, (250/2 - weather_status.get_width() / 2, 230, 0, 0))
+        self.surface.blit(self.weather_status, (250/2 - self.weather_status.get_width() / 2, 230, 0, 0))
         
-        weather_location = text_object("Växjö", "Ultralight", 60, 255)
-        self.surface.blit(weather_location, (250 + 200/2 - weather_location.get_width()/2, -5,0,0))
+        self.surface.blit(self.weather_location, (250 + 200/2 - self.weather_location.get_width()/2, -5,0,0))
         
-        weather_location = text_object("72°", "Light", 84, 255)
-        self.surface.blit(weather_location, (250 + 225/2 - weather_location.get_width()/2, 60 ,0,0))
+        self.surface.blit(self.weather_temp, (250 + 225/2 - self.weather_temp.get_width()/2, 60 ,0,0))
         
         ## NOW + 0, +3, +6 ,+ 9
         # One item
-        weather_max_0 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_0, (255, 145 ,0,0))
-        weather_min_0 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_0, (255, 176 ,0,0))
-        weather_splitter = cached_Images['divider_1']
+        
+        self.surface.blit(self.weather_max_0, (255, 145 ,0,0))
+        
+        self.surface.blit(self.weather_min_0, (255, 176 ,0,0))
         
         width = 0
         gap = 10
-        if weather_max_0.get_width() > weather_min_0.get_width():
-            width = weather_max_0.get_width()
+        if self.weather_max_0.get_width() > self.weather_min_0.get_width():
+            width = self.weather_max_0.get_width()
         else:
-            width = weather_min_0.get_width()
+            width = self.weather_min_0.get_width()
         
-        self.surface.blit(weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
-        weather_max_1 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
-        weather_min_1 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_1, (255 + width, 176,0,0))
-        weather_splitter = cached_Images['divider_1']
         
-        if weather_max_1.get_width() > weather_min_1.get_width():
-            width += weather_max_1.get_width()
+        self.surface.blit(self.weather_max_1, (255 + width, 145 ,0,0))
+        
+        self.surface.blit(self.weather_min_1, (255 + width, 176,0,0))
+        
+        if self.weather_max_1.get_width() > self.weather_min_1.get_width():
+            width += self.weather_max_1.get_width()
         else:
-            width += weather_min_1.get_width()
+            width += self.weather_min_1.get_width()
         
-        self.surface.blit(weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
-        weather_max_1 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
-        weather_min_1 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_1, (255 + width, 176,0,0))
-        weather_splitter = cached_Images['divider_1']
         
-        if weather_max_1.get_width() > weather_min_1.get_width():
-            width += weather_max_1.get_width()
+        self.surface.blit(self.weather_max_2, (255 + width, 145 ,0,0))
+        
+        self.surface.blit(self.weather_min_2, (255 + width, 176,0,0))
+        
+        if self.weather_max_2.get_width() > self.weather_min_2.get_width():
+            width += self.weather_max_2.get_width()
         else:
-            width += weather_min_1.get_width()
+            width += self.weather_min_2.get_width()
         
-        self.surface.blit(weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
-        weather_max_1 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_1, (255 + width, 145 ,0,0))
-        weather_min_1 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_1, (255 + width, 176,0,0))
+        self.surface.blit(self.weather_max_3, (255 + width, 145 ,0,0))
+        self.surface.blit(self.weather_min_3, (255 + width, 176,0,0))
         
         # Sun rise & Sun down
-        img = cached_Images["sunrise"]
-        self.surface.blit(img, (248, 215))
-        
-        weather_sunrise = text_object("06:00", "Light", 26, 255)
-        self.surface.blit(weather_sunrise, (248 + 32, 215))
-        
-        img = cached_Images["sunset"]
-        self.surface.blit(img, (248 + 70 +32, 215))
-        
-        weather_sunrise = text_object("19:32", "Light", 26, 255)
-        self.surface.blit(weather_sunrise, (248 + 70 + 64, 215))
+        self.surface.blit(self.sunrise_img, (248, 215))
+        self.surface.blit(self.weather_sunrise, (248 + 32, 215))
+        self.surface.blit(self.sunset_img, (248 + 70 +32, 215))
+        self.surface.blit(self.weather_sunrise, (248 + 70 + 64, 215))
         
         ## Other days
         # One item
-        height = 250 + weather_status.get_height()
+        height = 250 + self.weather_status.get_height()
         
-        weather_day = text_object("Mån", "Regular", 28, 255)
-        self.surface.blit(weather_day, (0, height,0,0))
         
-        img = cached_Images["weather_1_small"]
-        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
+        self.surface.blit(self.weather_day1, (0, height,0,0))
 
-        weather_min_0 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
+        self.surface.blit(self.weather_day1_img, (300 / 2 - self.weather_day1_img.get_width() / 2 , height))
+
+        self.surface.blit(self.weather_day1_min, (300 - self.weather_day1_min.get_width(), height + 1,0,0))
         
-        weather_max_0 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        self.surface.blit(self.weather_day1_max, (300 - self.weather_day1_min.get_width() - self.weather_day1_max.get_width() - 4, height,0,0))
         
-        height += weather_day.get_height() + 3
+        height += self.weather_day1.get_height() + 3
         
-        img = cached_Images["line_2"]
-        self.surface.blit(img, (0, height))
+        self.surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        weather_day = text_object("Tis", "Regular", 28, 255)
-        self.surface.blit(weather_day, (0, height,0,0))
+        self.surface.blit(self.weather_day2, (0, height,0,0))
+        self.surface.blit(self.weather_day2_img, (300 / 2 - self.weather_day2_img.get_width() / 2 , height))
+        self.surface.blit(self.weather_day2_min, (300 - self.weather_day2_min.get_width(), height + 1,0,0))
+        self.surface.blit(self.weather_day2_max, (300 - self.weather_day2_min.get_width() - self.weather_day2_max.get_width() - 4, height,0,0))
         
-        img = cached_Images["weather_1_small"]
-        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
-
-        weather_min_0 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
-        
-        weather_max_0 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
-        
-        height += weather_day.get_height() + 3
-        
-        img = cached_Images["line_2"]
-        self.surface.blit(img, (0, height))
+        height += self.weather_day2.get_height() + 3
+        self.surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        weather_day = text_object("Ons", "Regular", 28, 255)
-        self.surface.blit(weather_day, (0, height,0,0))
+        self.surface.blit(self.weather_day3, (0, height,0,0))
+        self.surface.blit(self.weather_day3_img, (300 / 2 - self.weather_day3_img.get_width() / 2 , height))
+        self.surface.blit(self.weather_day3_min, (300 - self.weather_day3_min.get_width(), height + 1,0,0))
+        self.surface.blit(self.weather_day3_max, (300 - self.weather_day3_min.get_width() - self.weather_day3_max.get_width() - 4, height,0,0))
         
-        img = cached_Images["weather_5_small"]
-        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
-
-        weather_min_0 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
-        
-        weather_max_0 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
-        
-        height += weather_day.get_height() + 3
-        
-        img = cached_Images["line_2"]
-        self.surface.blit(img, (0, height))
+        height += self.weather_day3.get_height() + 3
+        self.surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        weather_day = text_object("Tors", "Regular", 28, 255)
-        self.surface.blit(weather_day, (0, height,0,0))
-        
-        img = cached_Images["weather_3_small"]
-        self.surface.blit(img, (250 / 2 - img.get_width() / 2 , height))
-
-        weather_min_0 = text_object("65", "Thin", 28, 255)
-        self.surface.blit(weather_min_0, (250 - weather_min_0.get_width(), height + 1,0,0))
-        
-        weather_max_0 = text_object("72", "Light", 28, 255)
-        self.surface.blit(weather_max_0, (250 - weather_min_0.get_width() - weather_max_0.get_width() - 4, height,0,0))
+        self.surface.blit(self.weather_day4, (0, height,0,0))
+        self.surface.blit(self.weather_day4_img, (300 / 2 - self.weather_day4_img.get_width() / 2 , height))
+        self.surface.blit(self.weather_day4_min, (300 - self.weather_day4_min.get_width(), height + 1,0,0))
+        self.surface.blit(self.weather_day4_max, (300 - self.weather_day4_min.get_width() - self.weather_day4_max.get_width() - 4, height,0,0))
         
         
         self.surface.set_alpha(self.alpha)
@@ -686,9 +792,6 @@ class dateTime_Object(widget):
         
         self.surface.blit(text_4,(width, height - 10))
         
-        
-
-        
         self.surface.set_alpha(self.alpha)
 
         # rotate
@@ -701,7 +804,7 @@ class loading_Object(widget):
         widget.__init__(self, alpha)
     def update(self):
         self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        self.surface.add_surface(pygame.image.load("images/logo.png"))
+        self.surface.add_surface(pygame.image.load("images/logo.png").convert())
         
         self.surface.set_anchor(Box_container.C)
         self.surface.set_padding(0, 0)
@@ -718,46 +821,89 @@ class loading_Object(widget):
     def get_pos(self):
         return self.pos
 
+def dateFix(month):
+    if month == "May":
+        return "Maj"
+    elif month == "Oct":
+        return "Okt"
+    else:
+        return month
+
+def getDateObj(string):
+    date = string.split(" ", 1)[1]
+    date = date.rsplit(" ", 1)[0]
+    date = date.split(" ")
+    date = date[0] + " " + dateFix(date[1]) + " " + date[2] + " " + date[3]
+    
+    return datetime.datetime.strptime(date, "%d %b %Y %H:%M:%S")
+
 class nyheter_Object(widget):
+    item_holder = pygame.Surface((0,0))
+    
     def __init__(self,alpha):
         widget.__init__(self,alpha)
+    def getInfo(self):
+        self.header = text_object("Nyheter", "Thin", 32, 255)
+        
+        self.item_holder = pygame.Surface((250, 160 - self.header.get_height() - 6))
+        
+        self.item_1_time = text_object(forTime(getDateObj(news.sortedArray[0]["date"])), "Thin", 16, 240)
+        t = news.sortedArray[0]["title"]
+        self.item_1_text = text_object((t[:35] + '..') if len(t) > 35 else t, "Light", 16, 255)
+        
+        self.item_2_time = text_object(forTime(getDateObj(news.sortedArray[1]["date"])), "Thin", 16, 190)
+        t = news.sortedArray[1]["title"]
+        self.item_2_text = text_object((t[:35] + '..') if len(t) > 35 else t, "Light", 16, 200)
+        
+        self.item_3_time = text_object(forTime(getDateObj(news.sortedArray[2]["date"])), "Thin", 16, 140)
+        t = news.sortedArray[2]["title"]
+        self.item_3_text = text_object((t[:35] + '..') if len(t) > 35 else t, "Light", 16, 150)
+        
+        self.item_4_time = text_object(forTime(getDateObj(news.sortedArray[3]["date"])), "Thin", 16, 90)
+        t = news.sortedArray[3]["title"]
+        self.item_4_text = text_object((t[:35] + '..') if len(t) > 35 else t, "Light", 16, 100)
+        
+        self.item_5_time = text_object(forTime(getDateObj(news.sortedArray[4]["date"])), "Thin", 16, 40)
+        t = news.sortedArray[4]["title"]
+        self.item_5_text = text_object((t[:35] + '..') if len(t) > 35 else t, "Light", 16, 50)
     def update(self):
         self.surface = pygame.Surface((250, 160))
         
-        header = text_object("Nyheter", "Thin", 32, 255)
-        self.surface.blit(header, (self.surface.get_width() - header.get_width(), 0, 0 ,0))
         
-        self.surface.blit(cached_Images['line'],(0, header.get_height() + 3, 0 ,0))
-        height = header.get_height() + 6
+        self.surface.blit(self.header, (self.surface.get_width() - self.header.get_width(), 0, 0 ,0))
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 240), (0, height, 0, 0))
-        t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 255)
-        self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
-        height += text.get_height() + 3
+        self.surface.blit(cached_Images['line'],(0, self.header.get_height() + 3, 0 ,0))
+        height = self.header.get_height() + 6
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 190), (0, height, 0, 0))
-        t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 200)
-        self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
-        height += text.get_height() +3
+        self.surface.blit(self.item_holder, (0, height))
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 140), (0, height, 0, 0))
-        t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 150)
-        self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
-        height += text.get_height() + 3
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 90), (0, height, 0, 0))
-        t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 100)
-        self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
-        height += text.get_height() + 3
+        self.item_holder.fill(black)
         
-        self.surface.blit(text_object("1m sen", "Thin", 16, 40), (0, height, 0, 0))
-        t = "Bla bl abla bla bla blev skjuten igår natt omg vilken fucking skandal"
-        text = text_object((t[:32] + '..') if len(t) > 32 else t, "Light", 16, 50)
-        self.surface.blit(text, (self.surface.get_width() - text.get_width(), height, 0, 0))
+        height = 0
+        self.item_holder.blit(self.item_1_time, (0, height))
+        width = self.surface.get_width() - self.item_1_text.get_width() if self.item_1_text.get_width() < 250 - 75 else 75
+        self.item_holder.blit(self.item_1_text, (width, height, 0, 0))
+        height += self.item_1_text.get_height() + 3
+        
+        self.item_holder.blit(self.item_2_time, (0, height))
+        width = self.surface.get_width() - self.item_2_text.get_width() if self.item_2_text.get_width() < 250 - 75 else 75
+        self.item_holder.blit(self.item_2_text, (width, height, 0, 0))
+        height += self.item_2_text.get_height() + 3
+        
+        self.item_holder.blit(self.item_3_time, (0, height))
+        width = self.surface.get_width() - self.item_3_text.get_width() if self.item_3_text.get_width() < 250 - 75 else 75
+        self.item_holder.blit(self.item_3_text, (width, height, 0, 0))
+        height += self.item_3_text.get_height() + 3
+        
+        self.item_holder.blit(self.item_4_time, (0, height))
+        width = self.surface.get_width() - self.item_4_text.get_width() if self.item_4_text.get_width() < 250 - 75 else 75
+        self.item_holder.blit(self.item_4_text, (width, height, 0, 0))
+        height += self.item_4_text.get_height() + 3
+        
+        self.item_holder.blit(self.item_5_time, (0, height))
+        width = self.surface.get_width() - self.item_5_text.get_width() if self.item_5_text.get_width() < 250 - 75 else 75
+        self.item_holder.blit(self.item_5_text, (width, height, 0, 0))
         
         self.surface.set_alpha(self.alpha)
 
@@ -767,6 +913,8 @@ class nyheter_Object(widget):
 class aktiviteter_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self,alpha)
+    def getInfo(self):
+        return 
     def update(self):
         self.surface = pygame.Surface((250, 160))
         
@@ -841,6 +989,13 @@ def app_loop():
     # fader.add(0, quote_object, 25, None)
     fader.add(0, aktiviteter_object, 25, None)
     
+    weather.getJSON()
+    
+    # weather_object.getInfo()
+    
+    news.getJSON()
+    nyheter_object.getInfo()
+    
     screen.fill(black)
     
     while Running:
@@ -871,7 +1026,7 @@ def app_loop():
         
         # Weather
         weather_object.set_rotation(rotation)
-        weather_object.update()
+        #weather_object.update()
         
         # Nyheter
         nyheter_object.set_rotation(rotation)
@@ -883,7 +1038,7 @@ def app_loop():
         
         # Draw
         if rotation == 0:
-            screen.blit(weather_object.get_surface(), (25, 25, 0 , 0))
+            #screen.blit(weather_object.get_surface(), (25, 25, 0 , 0))
             screen.blit(dateTime_object.get_surface(), (screen.get_width() - dateTime_object.get_surface().get_width() - 25, 25, 0 , 0))
             screen.blit(pota_object.get_surface(), pota_object.get_pos())
             screen.blit(quote_object.get_surface(), quote_object.get_pos())
@@ -892,7 +1047,7 @@ def app_loop():
             screen.blit(nyheter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - 25, screen.get_height() - nyheter_object.get_surface().get_height() - 25))
             screen.blit(aktiviteter_object.get_surface(), (screen.get_width() - aktiviteter_object.get_surface().get_width() - 25, screen.get_height() - nyheter_object.get_surface().get_height() - aktiviteter_object.get_surface().get_height() - 25))
         elif rotation == 1:
-            screen.blit(weather_object.get_surface(), (25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
+            #screen.blit(weather_object.get_surface(), (25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
             screen.blit(dateTime_object.get_surface(), (25, 25, 0, 0))
             screen.blit(pota_object.get_surface(), (screen.get_width() / 2 - pota_object.get_surface().get_width() / 2, screen.get_height() / 2 - pota_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(quote_object.get_surface(), (screen.get_width() / 2 - quote_object.get_surface().get_width(), screen.get_height() / 2 - quote_object.get_surface().get_height() / 2, 0 ,0))
@@ -901,7 +1056,7 @@ def app_loop():
             screen.blit(nyheter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - 25, 25))
             screen.blit(aktiviteter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - aktiviteter_object.get_surface().get_width() - 25, 25))
         elif rotation == 2:
-            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
+            #screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
             screen.blit(dateTime_object.get_surface(), (25, screen.get_height() - dateTime_object.get_surface().get_height() - 25, 0 , 0))
             screen.blit(pota_object.get_surface(), pota_object.get_pos())
             screen.blit(quote_object.get_surface(), quote_object.get_pos())
@@ -910,7 +1065,7 @@ def app_loop():
             screen.blit(nyheter_object.get_surface(), (25, 25))
             screen.blit(aktiviteter_object.get_surface(), (25, 25 + nyheter_object.get_surface().get_height()))
         elif rotation == 3:
-            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, 25, 0 , 0))
+            #screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, 25, 0 , 0))
             screen.blit(dateTime_object.get_surface(), (screen.get_width() - dateTime_object.get_surface().get_width() - 25, screen.get_height() - dateTime_object.get_surface().get_height() - 25, 0 , 0))
             screen.blit(pota_object.get_surface(), (screen.get_width() / 2 - pota_object.get_surface().get_width() / 2, screen.get_height() / 2 - pota_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(quote_object.get_surface(), (screen.get_width() / 2 - quote_object.get_surface().get_width() / 2, screen.get_height() / 2 - quote_object.get_surface().get_height() / 2, 0 ,0))

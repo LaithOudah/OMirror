@@ -21,6 +21,9 @@ api = "681a848abbfde6c9da084c5e86d2a6f2"
 observationArray = {}
 forecastArray = {}
 
+# up
+updated = False
+
 def init():
     global owm, observation
     try:
@@ -60,45 +63,120 @@ def getObservation():
 
 #Convert status to swedish
 def convertSwedish(status):
-    if status == "Clear sky":
+    if status == "Clear sky".capitalize():
         return "Klar himmel"
-    elif status == "few clouds":
+    elif status == "few clouds".capitalize():
         return "Några moln"
-    elif status == "scattered clouds":
+    elif status == "scattered clouds".capitalize():
         return "Spridda moln"
-    elif status == "broken clouds":
+    elif status == "broken clouds".capitalize() or status == "clouds".capitalize():
         return "Molnigt"
-    elif status == "shower rain":
+    elif status == "shower rain".capitalize():
         return "Regnigt"
     elif status == "rain":
         return "Duggregn"
-    elif status == "thunderstorm":
+    elif status == "thunderstorm".capitalize():
         return "Storm"
-    elif status == "snow":
+    elif status == "snow".capitalize():
         return "Snöigt"
-    elif status == "mist":
+    elif status == "mist".capitalize():
         return "Dimmigt"
     else:
         return status
 
+def isNight():
+    datenow = datetime.now()
+    datetime_night1 = datetime(datenow.year, datenow.month, datenow.day, 19, 0, 0)
+    datetime_night2 = datetime(datenow.year, datenow.month, datenow.day, 23, 59, 59)
+    
+    datetime_night1_2 = datetime(datenow.year, datenow.month, datenow.day, 0, 0, 0)
+    datetime_night2_2 = datetime(datenow.year, datenow.month, datenow.day, 4, 0, 0)
+    
+    if (datenow >= datetime_night1 and datenow <= datetime_night2) or (datenow >= datetime_night1_2 and datenow <= datetime_night2_2):
+        return True
+    else:
+        return False
+
+def getImage(big, status):
+    if status == "Clear sky".capitalize():
+        if big == 1:
+            if isNight():
+                return "weather_1_big_night"
+            else:
+                return "weather_1_big"
+        else:
+            return "weather_1_small"
+    elif status == "few clouds".capitalize():
+        if big == 1:
+            if isNight():
+                return "weather_2_big_night"
+            else:
+                return "weather_2_big"
+        else:
+            return "weather_2_small"
+    elif status == "scattered clouds".capitalize():
+        if big == 1:
+            if isNight():
+                return "weather_3_big_night"
+            else:
+                return "weather_3_big"
+        else:
+            return "weather_3_small"
+    elif status == "broken clouds".capitalize() or status == "clouds".capitalize():
+        if big == 1:
+            return "weather_4_big"
+        else:
+            return "weather_4_small"
+    elif status == "shower rain".capitalize():
+        if big == 1:
+            return "weather_8_big"
+        else:
+            return "weather_8_small"
+    elif status == "rain".capitalize():
+        if big == 1:
+            return "weather_7_big"
+        else:
+            return "weather_7_small"
+    elif status == "thunderstorm".capitalize():
+        if big == 1:
+            return "weather_9_big"
+        else:
+            return "weather_9_small"
+    elif status == "snow".capitalize():
+        if big == 1:
+            return "weather_5_big"
+        else:
+            return "weather_5_small"
+    elif status == "mist".capitalize():
+        if big == 1:
+            return "weather_6_big"
+        else:
+            return "weather_6_small"
+
 # Create aray for weather variables
 def getForecast():
+    global updated
     for i in range (0, 8):
         temp = observationArray[i].get_temperature('celsius')
         
-        sunrise = observationArray[i].get_sunrise_time()
-        sunset = observationArray[i].get_sunset_time()
+        sunrise = observationArray[i].get_sunrise_time('iso')
+        sunset = observationArray[i].get_sunset_time('iso')
         
         day = observationArray[i].get_reference_time(timeformat='date').strftime("%A").capitalize()
         
-        forecastArray[i] = { "status": convertSwedish(observationArray[i].get_status()),
+        newData = { "status": observationArray[i].get_status().capitalize(),
                             "temp": temp["temp"],
                             "temp_max": temp["temp_max"],
                             "temp_min": temp["temp_min"],
                              "sunrise": sunrise,
                              "sunset": sunset,
-                             "day": day
+                             "day": day,
+                             "id": i
                             }
+        if forecastArray[i] != newData:
+            updated = True
+        
+        forecastArray[i] = newData
     # saved cached version
     saveJSON()
 
@@ -107,12 +185,29 @@ def saveJSON():
         json.dump(forecastArray, outfile)
 
 def getJSON():
+    global forecastArray
+    
     with open('cached/weather.json', 'r') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)
+            i = 0
             for element in t:
-                forecastArray[int(element)] = t[element]
+                forecastArray[i] = t
+                print(t)
+                i += 1
+            
+            #sort
+            forecastArray = forecastArray[0]
+            forecastArray_new = sorted(forecastArray, key=lambda k: int(k["id"]))
+
+def Updated():
+    global updated
+    if updated:
+        updated = False
+        return True
+    else:
+        return False
 
 def updateAll():
     getObservation()
