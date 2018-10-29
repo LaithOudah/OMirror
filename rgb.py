@@ -36,6 +36,8 @@ def init():
     pi = pigpio.pi()
     
     GPIO.setmode(GPIO.BCM)
+    
+    GPIO.setwarnings(False)
 
     GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         

@@ -18,14 +18,15 @@ cord_y = 0
 api = "681a848abbfde6c9da084c5e86d2a6f2"
 
 # Get forecast
-observationArray = {}
-forecastArray = {}
+observationArray = []
+forecastArray = []
+sortedArray = []
 
 # up
 updated = False
 
 def init():
-    global owm, observation
+    global owm, observation, owmSET
     try:
         owm = pyowm.OWM(api)
         
@@ -47,42 +48,54 @@ def getCityName():
     return loc.split(",")[0]
 
 def getObservation():
-    today = datetime.now() + timedelta(hours=1) # Prevent bug from happening
+    global observationArray
+    today = datetime.now() # Prevent bug from happening
+    if today.hour >= 0 and today.hour <= 2:
+        today += timedelta(hours=2)
+    elif today.hour == 21 and (today.hour <= 23 and today.minute <= 59):
+        today += timedelta(hours=1)
     today_2 = today
     
     # 4 for today
     # 4 for day 1,2,3,4
+    observationArray = []
     for i in range (0, 8):
         if i == 0:
-            observationArray[i] = observation.get_weather_at(today)
+            observationArray.append(observation.get_weather_at(today))
         elif i > 0 and i < 4:
-            observationArray[i] = observation.get_weather_at(today + timedelta(hours=(i-1)*3))
+            observationArray.append(observation.get_weather_at(today + timedelta(hours=(i-1)*3)))
         else:
             today_3 = today_2 + timedelta(days=abs(3-i))
-            observationArray[i] = observation.get_weather_at(datetime(today_3.year, today_3.month, today_3.day, 14, 0, 0))
+            observationArray.append(observation.get_weather_at(datetime(today_3.year, today_3.month, today_3.day, 14, 0, 0)))
 
 #Convert status to swedish
 def convertSwedish(status):
-    if status == "Clear sky".capitalize():
+    if status == 800:
         return "Klar himmel"
-    elif status == "few clouds".capitalize():
+    elif status == 801:
         return "Några moln"
-    elif status == "scattered clouds".capitalize():
+    elif status == 802:
         return "Spridda moln"
-    elif status == "broken clouds".capitalize() or status == "clouds".capitalize():
+    elif status == 803 or status == 804:
         return "Molnigt"
-    elif status == "shower rain".capitalize():
-        return "Regnigt"
-    elif status == "rain":
+    elif status >= 300 or status <= 321:
         return "Duggregn"
-    elif status == "thunderstorm".capitalize():
+    elif status >= 500 and status <= 502:
+        return "Lätt regn"
+    elif status >= 503 and status <= 531:
+        return "Regn"
+    elif status >= 200 and status <= 202:
+        return "Storm med regn"
+    elif status >= 210 and status <= 221:
         return "Storm"
-    elif status == "snow".capitalize():
+    elif status >= 222 and status <= 232:
+        return "Storm med duggregn"
+    elif status >= 600 and status <= 622:
         return "Snöigt"
-    elif status == "mist".capitalize():
+    elif status >= 701 and status <= 781:
         return "Dimmigt"
     else:
-        return status
+        return "Okänt"
 
 def isNight():
     datenow = datetime.now()
@@ -98,7 +111,7 @@ def isNight():
         return False
 
 def getImage(big, status):
-    if status == "Clear sky".capitalize():
+    if status == 800:
         if big == 1:
             if isNight():
                 return "weather_1_big_night"
@@ -106,7 +119,7 @@ def getImage(big, status):
                 return "weather_1_big"
         else:
             return "weather_1_small"
-    elif status == "few clouds".capitalize():
+    elif status == 801:
         if big == 1:
             if isNight():
                 return "weather_2_big_night"
@@ -114,7 +127,7 @@ def getImage(big, status):
                 return "weather_2_big"
         else:
             return "weather_2_small"
-    elif status == "scattered clouds".capitalize():
+    elif status == 802:
         if big == 1:
             if isNight():
                 return "weather_3_big_night"
@@ -122,40 +135,48 @@ def getImage(big, status):
                 return "weather_3_big"
         else:
             return "weather_3_small"
-    elif status == "broken clouds".capitalize() or status == "clouds".capitalize():
+    elif status == 803 or status == 804:
         if big == 1:
             return "weather_4_big"
         else:
             return "weather_4_small"
-    elif status == "shower rain".capitalize():
+    elif status >= 300 or status <= 502:
         if big == 1:
             return "weather_8_big"
         else:
             return "weather_8_small"
-    elif status == "rain".capitalize():
+    elif status >= 503 and status <= 531:
         if big == 1:
             return "weather_7_big"
         else:
             return "weather_7_small"
-    elif status == "thunderstorm".capitalize():
+    elif status >= 200 and status <= 232:
         if big == 1:
             return "weather_9_big"
         else:
             return "weather_9_small"
-    elif status == "snow".capitalize():
+    elif status >= 600 and status <= 622:
         if big == 1:
             return "weather_5_big"
         else:
             return "weather_5_small"
-    elif status == "mist".capitalize():
+    elif status >= 701 and status <= 781:
         if big == 1:
             return "weather_6_big"
         else:
             return "weather_6_small"
+    else:
+        if big == 1:
+            return "weather_1_big"
+        else:
+            return "weather_1_small"
 
 # Create aray for weather variables
 def getForecast():
-    global updated
+    global updated, forecastArray
+    
+    placeHolder = []
+    
     for i in range (0, 8):
         temp = observationArray[i].get_temperature('celsius')
         
@@ -164,7 +185,7 @@ def getForecast():
         
         day = observationArray[i].get_reference_time(timeformat='date').strftime("%A").capitalize()
         
-        newData = { "status": observationArray[i].get_status().capitalize(),
+        newData = { "status": observationArray[i].get_weather_code(),
                             "temp": temp["temp"],
                             "temp_max": temp["temp_max"],
                             "temp_min": temp["temp_min"],
@@ -173,11 +194,17 @@ def getForecast():
                              "day": day,
                              "id": i
                             }
-        if forecastArray[i] != newData:
-            updated = True
         
-        forecastArray[i] = newData
+        try:
+            if forecastArray[i] != newData:
+                updated = True
+        except Exception:
+            pass
+        
+        placeHolder.append(newData)
     # saved cached version
+    forecastArray = placeHolder
+    
     saveJSON()
 
 def saveJSON():
@@ -185,21 +212,24 @@ def saveJSON():
         json.dump(forecastArray, outfile)
 
 def getJSON():
-    global forecastArray
+    global forecastArray, sortedArray
     
     with open('cached/weather.json', 'r') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)
             i = 0
+            
+            # EMpty list
+            forecastArray = []
+            sortedArray = []
+            
             for element in t:
-                forecastArray[i] = t
-                print(t)
+                forecastArray.append(element)
                 i += 1
             
-            #sort
-            forecastArray = forecastArray[0]
-            forecastArray_new = sorted(forecastArray, key=lambda k: int(k["id"]))
+            # Sort list
+            sortedArray = sorted(forecastArray, key=lambda k: k['id'])
 
 def Updated():
     global updated
@@ -212,3 +242,6 @@ def Updated():
 def updateAll():
     getObservation()
     getForecast()
+
+init()
+updateAll()

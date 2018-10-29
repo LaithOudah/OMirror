@@ -12,7 +12,10 @@ quoteArray = {}
 date = None
 
 def get_randomQuote():
-    return quoteArray[random.randint(0, count_max)]
+    try:
+        return quoteArray[random.randint(0, count_max)]
+    except Exception:
+        return {"author": "-", "quote": "-", "date": "-"}
 
 def get_Data():
     global quoteArray
@@ -22,7 +25,7 @@ def get_Data():
     
     # Grab data only when 1 day has passed
     if date != None:
-        if datetime.now() + timedelta(days=1) > date:
+        if date + timedelta(hours=24) > datetime.now():
             return
     
     payload = {}

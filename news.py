@@ -23,29 +23,31 @@ def news_Parse():
     global updated, newsArray
     newsParser = feedparser.parse(news_rss)
     
-    i=0
-    
-    # empty list
-    newsArray = []
-    
-    for post in newsParser.entries:
-        # save to news field
-        try:
-            if newsArray[i].get("title") != post.title:
-                updated = True
-        except Exception:
-            updated = False
-
-        newsArray.append({'id': i, 'title': post.title, 'date': post.published})
+    if newsParser.status == 200:
+        getJSON()
         
-        # Break
-        i += 1
-        if i == news_max:
-            break
-
-    # save cached version
-    if not newsArray:
-        saveJSON()
+        i=0
+        
+        # empty list
+        referenceArray = newsArray
+        newsArray = []
+        for post in newsParser.entries:
+            # save to news field
+            try:
+                if referenceArray[i]["title"] != post.title:
+                    updated = True
+            except Exception:
+                pass
+            
+            newsArray.append({'id': i, 'title': post.title, 'date': post.published})
+            
+            # Break
+            i += 1
+            if i == news_max:
+                break
+        # save cached version
+        if len(newsArray) > 0:
+            saveJSON()
 
 def saveJSON():
     with open('cached/news.json', 'w') as outfile:
@@ -70,12 +72,10 @@ def getJSON():
             # Sort list
             sortedArray = sorted(newsArray, key=lambda k: k['id'])
         
-def newsUpdated():
+def isUpdated():
     global updated
     if updated:
         updated = False
         return True
     else:
         return False
-
-news_Parse()
