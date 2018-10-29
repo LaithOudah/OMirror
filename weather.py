@@ -50,13 +50,17 @@ def getCityName():
 def getObservation():
     global observationArray
     today = datetime.now() # Prevent bug from happening
-    if today.hour >= 0 and today.hour <= 2:
-        today += timedelta(hours=2)
-    elif today.hour == 21 and (today.hour <= 23 and today.minute <= 59):
-        today += timedelta(hours=1)
+    
+    while True:
+        try:
+            observation.get_weather_at(today)
+            break
+        except pyowm.exceptions.api_response_error.NotFoundError:
+            today += timedelta(hours=1)
+    
     today_2 = today
     
-    # 4 for today
+    # 4 for todayz
     # 4 for day 1,2,3,4
     observationArray = []
     for i in range (0, 8):

@@ -11,6 +11,8 @@ import glob
 import quotes, aktiviteter
 import centered_text as centeredt
 
+import git
+
 # variables
 Running = True
 internetConnection = False
@@ -20,13 +22,20 @@ bluetooth_name = ""
 wifi_pass = ""
 wifi_ssid = ""
 language = ""
+
+quote_delay = 15
+pota_delay = 8
+
 rotation = 0
 rotated = False
-
 rotation_buttonpressed = True
 
 autosleep = 0
-autosleeping = True
+autoslept = False
+autosleeping = False
+
+pota_timestamp = None
+quote_timestamp = None
 
 ## Init
 pygame.init()
@@ -42,10 +51,19 @@ def cache_Images():
         cached_Images[name] = pygame.image.load(item).convert()
         print(item)
 
+def updateApp():
+    print("Checking for updates")
+    try:
+        g = git.cmd.Git("/home/pi/Desktop/OMirror/")
+        g.pull()
+        print("Updating done")
+    except Exception:
+        print("Updating failed")
+
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
-screen = pygame.display.set_mode((1200, 1000))
-#screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+#screen = pygame.display.set_mode((1200, 1000))
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
 icon = pygame.image.load('images/icon.png').convert()
@@ -143,7 +161,7 @@ class app_getDataThread (threading.Thread):
     def __init__(self):
         threading.Thread.__init__(self)
     def run(self):
-        global internetConnection
+        global internetConnection, pota_timestamp, quote_timestamp
         while True:
             if(Running == False):
                 break
@@ -161,16 +179,66 @@ class app_getDataThread (threading.Thread):
             else:
                 rgb.wifi_led(0)
             
+            
+            #southtext
             if centeredt.getFromTime() != 0:
                 if not southtext_object.checkString(centeredt.getFromTime()):
-                    southtext_object.setString()
+                    if(fader.fadeing(southtext_object)):
+                        continue
+                    else:
+                        if(southtext_object.get_surface().get_alpha() >= 255):
+                            fader.add(1, southtext_object, 50, None)
+                        else:
+                            southtext_object.setString()
+                            fader.add(0, southtext_object, 50, None)
+            else:
+                if(southtext_object.get_surface().get_alpha() >= 255):
+                    fader.add(1, southtext_object, 50, None)
+            
+            #quote and pota timestamps
+            if quote_timestamp != None:
+                if datetime.datetime.now() > quote_timestamp:
+                    quote_timestamp = None
+                    fader.add(1, quote_object, 50, None)
+            
+            if pota_timestamp != None:
+                if datetime.datetime.now() > pota_timestamp:
+                    pota_timestamp = None
+                    fader.add(1, pota_object, 50, None)
             
 
-def showQuote():
+def show_quote():
+    global quote_timestamp
     quote_object.setString()
+    
+    quote_timestamp = datetime.datetime.now() + datetime.timedelta(seconds=quote_delay)
+    
+    fader.add(0, quote_object, 50, None)
+    
+    
+
+def showQuote():
+    if(quote_object.get_surface().get_alpha() == 0):
+        if(pota_object.get_surface().get_alpha() >= 255 or fader.fadeing(pota_object)):
+            fader.stop(pota_object)
+            fader.add(1, pota_object, 50, show_quote)
+        else:
+            show_quote()
+        
+def show_pota():
+    global pota_timestamp
+    pota_object.getInfo()
+    fader.add(0, pota_object, 50, None)
+    
+    quote_timestamp = datetime.datetime.now() + datetime.timedelta(seconds=pota_delay)
 
 def showPota():
-    pota_object.getInfo()
+    if(pota_object.get_surface().get_alpha() == 0):
+        if(quote_object.get_surface().get_alpha() >= 255 or fader.fadeing(quote_object)):
+            fader.stop(quote_object)
+            fader.add(1, quote_object, 50, show_pota)
+        else:
+            show_pota()
 
 class app_getInfoThread (threading.Thread):
     def __init__(self):
@@ -195,7 +263,10 @@ class app_getInfoThread (threading.Thread):
                 # load from cache
                 news.getJSON()
                 weather.getJSON()
-                quotes.getJSON()
+            
+            quotes.getJSON()
+            
+            centeredt.getJSON()
             
             weather_object.getInfo()
             nyheter_object.getInfo()
@@ -215,7 +286,7 @@ def checkConnection():
 
 # Check data
 def checkData():
-    global name,bluetooth_name, wifi_ssid, wifi_pass, autosleep, language, rotation
+    global name,bluetooth_name, wifi_ssid, wifi_pass, language, rotation, autoslept, autosleeping, quote_delay, pota_delay
     
     cc = data.getData("rgb_single").split(",")
     rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
@@ -245,7 +316,48 @@ def checkData():
     wifi_ssid = data.getData("wifi_ssid")
     wifi_pass = data.getData("wifi_pass")
     
-    autosleep = int(data.getData("autosleep"))
+    pota_delay = int(data.getData("pota_delay"))
+    quote_delay = int(data.getData("quote_delay"))
+    
+    try:
+        int(data.getData("autosleep"))
+        
+        autosleeping = False
+        autoslept = False
+    except Exception:
+        time = data.getData("autosleep").split(",")
+        time1 = time[0].split(":")
+        time1[0] = int(time1[0])
+        time1[1] = int(time1[1])
+        time2 = time[1].split(":")
+        time2[0] = int(time2[0])
+        time2[1] = int(time2[1])
+        timeNow = datetime.datetime.now()
+        
+        if timeNow.hour >= time1[0] and timeNow.hour <= time2[0]:
+            if timeNow.hour == time1[0] and timeNow.minute < time1[1]:
+                autoslept = False
+                autosleeping = False
+            elif timeNow.hour == time2[0] and timeNow.minute > time2[1]:
+                autoslept = False
+                autosleeping = False
+            if autoslept == False:
+                autosleeping = True
+                autoslept = True
+        elif time1[0] > time2[0]:
+            if timeNow.hour <= time2[0]:
+                if timeNow.hour + 24 >= time1[0]:
+                    if timeNow.hour == time1[0] and timeNow.minute < time1[1]:
+                        autoslept = False
+                        autosleeping = False
+                    elif timeNow.hour == time2[0] and timeNow.minute > time2[1]:
+                        autoslept = False
+                        autosleeping = False
+                    if autoslept == False:
+                        autosleeping = True
+                        autoslept = True
+    
+    
     language = data.getData("language")
 
 Thread_getData = app_getDataThread()
@@ -303,7 +415,7 @@ class Box_container():
     SW = 6
     S = 7
     SE = 8
-
+    
     def __init__(self, vert, x, y):
         self.list = list()
         self.x = x
@@ -363,7 +475,7 @@ class Box_container():
                 if(self.justify == self.LEFT):
                     self.surface.blit(surf, (width, height, 0, 0))
                 elif(self.justify == self.CENTER):
-                    self.surface.blit(surf, (self.width - surf.get_width() + surf.get_width()/2, height, 0, 0))
+                    self.surface.blit(surf, (self.width/2 - surf.get_width()/2, height, 0, 0))
                 else:
                     self.surface.blit(surf, (self.width - surf.get_width(), height, 0, 0))
             else:
@@ -412,12 +524,23 @@ def initialize():
     return 0
 
 ## CHECK BUTTON STATUS
+buttonPressed = False
+
 def buttonStatus():
-    global rotation_buttonpressed, rotation, rotated
+    global rotation_buttonpressed, rotation, rotated, buttonPressed, autosleeping
     
     if(rgb.GPIO.input(rgb.GPIO_BUTTON) == False):
-        rgb.RGB_on()
+        if buttonPressed == True:
+            autosleeping = False
+            buttonPressed = False
+        if autosleeping:
+            rgb.RGB_off()
+        else:
+            rgb.RGB_on()
     else:
+        if buttonPressed == False:
+            autosleeping = False
+            buttonPressed = True
         screen.fill(black)
         rgb.RGB_off()
     
@@ -724,6 +847,13 @@ class southtext_Object(widget):
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
+        
+        self.surface = Box_container(True, screen.get_width() /2, screen.get_height())
+        
+        ww, pos = self.surface.draw()
+        
+        self.surface = ww
+        self.surface.set_alpha(alpha)
     def setString(self):
         self.string = centeredt.getFromTime() if centeredt.getFromTime() != 0 else ""
         
@@ -740,6 +870,7 @@ class southtext_Object(widget):
         
         self.surface.set_anchor(Box_container.S)
         self.surface.set_padding(0, 25)
+        self.surface.set_justify(Box_container.CENTER)
 
         ww, pos = self.surface.draw()
         self.surface = ww
@@ -758,6 +889,11 @@ class pota_Object(widget):
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
+        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        ww, pos = self.surface.draw()
+        
+        self.surface = ww
+        self.surface.set_alpha(alpha)
     def getInfo(self):
         if name == "":
             self.name = text_object("-", "Thin", 82, 255)
@@ -790,6 +926,11 @@ class quote_Object(widget):
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
+        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        ww, pos = self.surface.draw()
+        
+        self.surface = ww
+        self.surface.set_alpha(alpha)
     def setString(self):
         quote = quotes.get_randomQuote()
         self.string = quote["quote"]
@@ -808,6 +949,7 @@ class quote_Object(widget):
         
         self.surface.set_anchor(Box_container.C)
         self.surface.set_padding(0, 0)
+        self.surface.set_justify(Box_container.CENTER)
 
         ww, pos = self.surface.draw()
         self.surface = ww
@@ -860,9 +1002,11 @@ class loading_Object(widget):
     def update(self):
         self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
         self.surface.add_surface(pygame.image.load("images/logo.png").convert())
+        self.surface.add_surface(text_object("Laddar...",  "Thin", 36, 255))
         
         self.surface.set_anchor(Box_container.C)
         self.surface.set_padding(0, 0)
+        self.surface.set_justify(Box_container.CENTER)
 
         ww, pos = self.surface.draw()
         self.surface = ww
@@ -1101,11 +1245,9 @@ def app_loop():
     
     # set Objects
     fader.add(0, weather_object, 25, None)
-    # fader.add(0, southtext_object, 25, None)
-    # fader.add(0, pota_object, 25, None)
+    fader.add(0, southtext_object, 25, None)
     fader.add(0, dateTime_object, 25, None)
     fader.add(0, nyheter_object, 25, None)
-    #fader.add(0, quote_object, 25, None)
     fader.add(0, aktiviteter_object, 25, None)
     
     
@@ -1120,8 +1262,12 @@ def app_loop():
     nyheter_object.getInfo()
     aktiviteter_object.getInfo()
     pota_object.getInfo()
-    southtext_object.setString()
     quote_object.setString()
+    
+    showQuote()
+    
+    # Update on start
+    updateApp()
     
     screen.fill(black)
     
@@ -1133,6 +1279,8 @@ def app_loop():
         if rotated:
             screen.fill(black)
             rotated = False
+        
+        screen.fill(black)
         
         # Widget Date Time
         dateTime_object.set_rotation(rotation)
@@ -1200,6 +1348,10 @@ def app_loop():
             
             screen.blit(nyheter_object.get_surface(), (25, screen.get_height() - 25 - nyheter_object.get_surface().get_height()))
             screen.blit(aktiviteter_object.get_surface(), (25 + nyheter_object.get_surface().get_width(), screen.get_height() - 25 - aktiviteter_object.get_surface().get_height()))
+        
+        # autosleeping
+        if autosleeping:
+            screen.fill(black)
         
         # BUTTON status
         buttonStatus()

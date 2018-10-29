@@ -27,7 +27,7 @@ def getFromTime():
                 return 0
             return e['text']
         elif timeStart.hour > timeEnd.hour:
-            if timeNow.hour >= timeEnd.hour:
+            if timeNow.hour <= timeEnd.hour:
                 if timeNow.hour + 24 >= timeStart.hour:
                     if timeNow.hour == timeStart.hour and timeNow.minute < timeStart.minute:
                         return 0
