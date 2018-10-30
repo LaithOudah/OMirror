@@ -18,10 +18,8 @@ Running = True
 internetConnection = False
 
 name = ""
-bluetooth_name = ""
 wifi_pass = ""
 wifi_ssid = ""
-language = ""
 
 quote_delay = 15
 pota_delay = 8
@@ -286,7 +284,7 @@ def checkConnection():
 
 # Check data
 def checkData():
-    global name,bluetooth_name, wifi_ssid, wifi_pass, language, rotation, autoslept, autosleeping, quote_delay, pota_delay
+    global name,bluetooth_name, wifi_ssid, wifi_pass, language, rotation, autoslept, autosleeping, quote_delay, pota_delay,pota_quote_show
     
     cc = data.getData("rgb_single").split(",")
     rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
@@ -304,12 +302,8 @@ def checkData():
     
     rotation = int(data.getData("rotation"))
     
-    weather.cord_x = float(data.getData("weather_cord_x"))
-    weather.cord_y = float(data.getData("weather_cord_y"))
+    weather.city = data.getData("weather_city")
     weather.api = data.getData("weather_api")
-    
-    news.setRSS(data.getData("news_rss"))
-    news.setMax(int(data.getData("news_max")))
     
     name = data.getData("name")
 
@@ -318,14 +312,21 @@ def checkData():
     
     pota_delay = int(data.getData("pota_delay"))
     quote_delay = int(data.getData("quote_delay"))
+    pota_quote_show = int(data.getData("pota_quote_show"))
+    if pota_quote_show == 1:
+        showPota()
+        data.setData("pota_quote_show", 0)
+    elif pota_quote_show == 2:
+        showQuote()
+        data.setData("pota_quote_show", 0)
     
-    try:
-        int(data.getData("autosleep"))
-        
+    autosleep = int(data.getData("autosleep"))
+    
+    if autosleep == 0:
         autosleeping = False
         autoslept = False
-    except Exception:
-        time = data.getData("autosleep").split(",")
+    else:
+        time = data.getData("autosleep_time").split(",")
         time1 = time[0].split(":")
         time1[0] = int(time1[0])
         time1[1] = int(time1[1])
@@ -356,9 +357,6 @@ def checkData():
                     if autoslept == False:
                         autosleeping = True
                         autoslept = True
-    
-    
-    language = data.getData("language")
 
 Thread_getData = app_getDataThread()
 Thread_getInfo = app_getInfoThread()
@@ -996,13 +994,18 @@ class dateTime_Object(widget):
 
 class loading_Object(widget):
     pos = None
+    string = "Initialiserar..."
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
+        
+        self.img = pygame.image.load("images/logo.png").convert()
+    def setString(self, string):
+        self.string = string
     def update(self):
         self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        self.surface.add_surface(pygame.image.load("images/logo.png").convert())
-        self.surface.add_surface(text_object("Laddar...",  "Thin", 36, 255))
+        self.surface.add_surface(self.img)
+        self.surface.add_surface(text_object(self.string,  "Thin", 36, 255))
         
         self.surface.set_anchor(Box_container.C)
         self.surface.set_padding(0, 0)
@@ -1234,14 +1237,19 @@ def app_loop():
     
     # Show Loading screen
     screen.fill(black)
-    
     loading_object.update()
     screen.blit(loading_object.get_surface(), loading_object.get_pos())
-    
     pygame.display.update()
     
     # Initialize
     initialize()
+    
+    # Show Loading screen
+    screen.fill(black)
+    loading_object.setString("Laddar in data...")
+    loading_object.update()
+    screen.blit(loading_object.get_surface(), loading_object.get_pos())
+    pygame.display.update()
     
     # set Objects
     fader.add(0, weather_object, 25, None)
@@ -1264,7 +1272,12 @@ def app_loop():
     pota_object.getInfo()
     quote_object.setString()
     
-    showQuote()
+    # Show Loading screen
+    screen.fill(black)
+    loading_object.setString("Kollar efter uppdateringar...")
+    loading_object.update()
+    screen.blit(loading_object.get_surface(), loading_object.get_pos())
+    pygame.display.update()
     
     # Update on start
     updateApp()

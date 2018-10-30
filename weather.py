@@ -13,9 +13,9 @@ observation = None
 
 owmSET = False
 
-cord_x = 0
-cord_y = 0
 api = "681a848abbfde6c9da084c5e86d2a6f2"
+
+city = ""
 
 # Get forecast
 observationArray = []
@@ -32,6 +32,7 @@ def init():
         
         observation = owm.three_hours_forecast(loc)
         
+        print("OWM Initialised")
         owmSET = True
     except Exception:
         owmSET = False
@@ -51,12 +52,16 @@ def getObservation():
     global observationArray
     today = datetime.now() # Prevent bug from happening
     
+    i = 0
     while True:
         try:
+            if i >= 4:
+                return
             observation.get_weather_at(today)
             break
-        except pyowm.exceptions.api_response_error.NotFoundError:
+        except Exception:
             today += timedelta(hours=1)
+            i+=1
     
     today_2 = today
     
@@ -180,6 +185,9 @@ def getForecast():
     global updated, forecastArray
     
     placeHolder = []
+    
+    if len(observationArray) == 0:
+        return
     
     for i in range (0, 8):
         temp = observationArray[i].get_temperature('celsius')
