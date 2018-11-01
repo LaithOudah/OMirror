@@ -13,7 +13,7 @@ date = None
 
 def get_randomQuote():
     try:
-        return quoteArray[random.randint(0, count_max)]
+        return quoteArray[random.randint(0, count_max-1)]
     except Exception:
         return {"author": "-", "quote": "-", "date": "-"}
 

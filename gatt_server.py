@@ -247,7 +247,18 @@ class OMirrorService(Service):
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.OMIRROR_SVC_UUID, True)
         self.add_characteristic(PQ_ShowChar(bus, 0, self))
-        self.add_characteristic(WCityChar(bus, 1, self))
+        self.add_characteristic(Pota_DelayChar(bus, 1, self))
+        self.add_characteristic(Quote_DelayChar(bus, 2, self))
+        self.add_characteristic(Name_Char(bus, 3, self))
+        self.add_characteristic(Autosleep_Char(bus, 4, self))
+        self.add_characteristic(AutosleepTimer_Char(bus, 5, self))
+        self.add_characteristic(City_Char(bus, 6, self))
+        self.add_characteristic(RGBMode_Char(bus, 7, self))
+        self.add_characteristic(RGBSingle_Char(bus, 8, self))
+        self.add_characteristic(RGBFlashSeq_Char(bus, 9, self))
+        self.add_characteristic(RGBFlashDelay_Char(bus, 10, self))
+        self.add_characteristic(Wifissid_Char(bus, 11, self))
+        self.add_characteristic(Wifipass_Char(bus, 12, self))
 
 class PQ_ShowChar(Characteristic):
     CHRC_UUID = '2844'
@@ -275,7 +286,7 @@ class Pota_DelayChar(Characteristic):
                 service)
         self.value = []
     
-    def ReadValue(self):
+    def ReadValue(self, options):
         return [dbus.Byte(int(data.getData("pota_delay")))]
     
     def WriteValue(self, value, options):
@@ -293,7 +304,7 @@ class Quote_DelayChar(Characteristic):
                 service)
         self.value = []
     
-    def ReadValue(self):
+    def ReadValue(self, options):
         return [dbus.Byte(int(data.getData("quote_delay")))]
     
     def WriteValue(self, value, options):
@@ -311,11 +322,11 @@ class Name_Char(Characteristic):
                 service)
         self.value = []
     
-    def ReadValue(self):
-        data = []
+    def ReadValue(self, options):
+        databyte = []
         for c in data.getData("name"):
-            data.append(dbus.Byte(c))
-        return datareturn []
+            databyte.append(dbus.Byte(ord(c)))
+        return databyte
     
     def WriteValue(self, value, options):
         self.value = value
@@ -338,7 +349,7 @@ class Autosleep_Char(Characteristic):
                 service)
         self.value = []
     
-    def ReadValue(self):
+    def ReadValue(self, options):
         return [dbus.Byte(int(data.getData("autosleep")))]
     
     def WriteValue(self, value, options):
@@ -356,9 +367,9 @@ class AutosleepTimer_Char(Characteristic):
                 service)
         self.value = []
     
-    def ReadValue(self):
+    def ReadValue(self, options):
         string = data.getData("autosleep_time")
-        string.split(",")
+        string = string.split(",")
         time1 = string[0].split(":")
         time2 = string[1].split(":")
         
@@ -369,9 +380,8 @@ class AutosleepTimer_Char(Characteristic):
         string = "%i:%i,%i:%i" % (int(self.value[0]), int(self.value[1]), int(self.value[2]), int(self.value[3]))
         data.setData("autosleep_time", string)
 
-'''
-class WCityChar(Characteristic):
-    CHRC_UUID = '2845'
+class City_Char(Characteristic):
+    CHRC_UUID = '2850'
 
     def __init__(self, bus, index, service):
         Characteristic.__init__(
@@ -381,7 +391,11 @@ class WCityChar(Characteristic):
                 service)
         self.value = []
     
-    
+    def ReadValue(self, options):
+        databyte = []
+        for c in data.getData("weather_city"):
+            databyte.append(dbus.Byte(ord(c)))
+        return databyte
     
     def WriteValue(self, value, options):
         self.value = value
@@ -391,16 +405,167 @@ class WCityChar(Characteristic):
             if isinstance(byte, dbus.Byte):
                 chars.append(chr(byte))
         string = string.join(chars)
-        print(string)
+        data.setData("weather_city", string)
+
+class RGBMode_Char(Characteristic):
+    CHRC_UUID = '2851'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
     
-    def ReadValue(self, value):
-        data = []
+    def ReadValue(self, options):
+        return [dbus.Byte(int(data.getData("rgb_mode")))]
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        data.setData("rgb_mode", int(self.value[0]))
+
+class RGBSingle_Char(Characteristic):
+    CHRC_UUID = '2852'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
+    
+    def ReadValue(self, options):
+        databyte = []
+        string = data.getData("rgb_single").split(",")
+        databyte.append(dbus.Byte(int(string[0])))
+        databyte.append(dbus.Byte(int(string[1])))
+        databyte.append(dbus.Byte(int(string[2])))
+        return databyte
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        
+        string = "%i,%i,%i" % (int(self.value[0]), int(self.value[1]), int(self.value[2]))
+        
+        data.setData("rgb_single", string)
+
+class RGBFlashSeq_Char(Characteristic):
+    CHRC_UUID = '2853'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
+    
+    def ReadValue(self, options):
+        databyte = []
+        string = data.getData("rgb_flash_sequence").split(":")
+        for s in string:
+            string2 = s.split(",")
+            databyte.append(dbus.Byte(int(string2[0])))
+            databyte.append(dbus.Byte(int(string2[1])))
+            databyte.append(dbus.Byte(int(string2[2])))
+        return databyte
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        
+        string = ""
+        
+        i = 0
+        for byte in self.value:
+            if isinstance(byte, dbus.Byte):
+                string += "%i" % int(byte)
+        ## Function not finished
+
+class RGBFlashDelay_Char(Characteristic):
+    CHRC_UUID = '2854'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
+    
+    def ReadValue(self, options):
+        string = data.getData("rgb_flash_delay")
+        
+        value = int(string)
+        
+        part_1 = (value>>8) & 0xFF
+        
+        part_2 = value & 0xFF
+        
+        return [dbus.Byte(part_1), dbus.Byte(part_2)]
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        
+        part_1 = int(self.value[0])
+        part_2 = int(self.value[1])
+        value_c = hex(part_1<<8 | part_2)
+        data.setData("rgb_flash_delay", int(value_c, 16))
+
+class Wifissid_Char(Characteristic):
+    CHRC_UUID = '2855'
+
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
+    
+    def ReadValue(self, options):
+        databyte = []
         for c in data.getData("weather_city"):
-            data.append(dbus.Byte(c))
-        return data
-'''
+            databyte.append(dbus.Byte(ord(c)))
+        return databyte
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        string = ""
+        chars = []
+        for byte in self.value:
+            if isinstance(byte, dbus.Byte):
+                chars.append(chr(byte))
+        string = string.join(chars)
+        data.setData("weather_city", string)
 
+class Wifipass_Char(Characteristic):
+    CHRC_UUID = '2856'
 
+    def __init__(self, bus, index, service):
+        Characteristic.__init__(
+                self, bus, index,
+                self.CHRC_UUID,
+                ['read', 'write'],
+                service)
+        self.value = []
+    
+    def ReadValue(self, options):
+        databyte = []
+        for c in data.getData("weather_city"):
+            databyte.append(dbus.Byte(ord(c)))
+        return databyte
+    
+    def WriteValue(self, value, options):
+        self.value = value
+        string = ""
+        chars = []
+        for byte in self.value:
+            if isinstance(byte, dbus.Byte):
+                chars.append(chr(byte))
+        string = string.join(chars)
+        data.setData("weather_city", string)
 
 def register_app_cb():
     print('GATT application registered')

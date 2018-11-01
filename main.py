@@ -60,8 +60,8 @@ def updateApp():
 
 locale.setlocale(locale.LC_TIME, "sv_SE.utf8")
   
-#screen = pygame.display.set_mode((1200, 1000))
-screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1200, 1000))
+#screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
 icon = pygame.image.load('images/icon.png').convert()
@@ -228,7 +228,7 @@ def show_pota():
     pota_object.getInfo()
     fader.add(0, pota_object, 50, None)
     
-    quote_timestamp = datetime.datetime.now() + datetime.timedelta(seconds=pota_delay)
+    pota_timestamp = datetime.datetime.now() + datetime.timedelta(seconds=pota_delay)
 
 def showPota():
     if(pota_object.get_surface().get_alpha() == 0):
@@ -313,10 +313,10 @@ def checkData():
     pota_delay = int(data.getData("pota_delay"))
     quote_delay = int(data.getData("quote_delay"))
     pota_quote_show = int(data.getData("pota_quote_show"))
-    if pota_quote_show == 1:
+    if pota_quote_show == 2:
         showPota()
         data.setData("pota_quote_show", 0)
-    elif pota_quote_show == 2:
+    elif pota_quote_show == 1:
         showQuote()
         data.setData("pota_quote_show", 0)
     
@@ -342,9 +342,10 @@ def checkData():
             elif timeNow.hour == time2[0] and timeNow.minute > time2[1]:
                 autoslept = False
                 autosleeping = False
-            if autoslept == False:
-                autosleeping = True
-                autoslept = True
+            else:
+                if autoslept == False:
+                    autosleeping = True
+                    autoslept = True
         elif time1[0] > time2[0]:
             if timeNow.hour <= time2[0]:
                 if timeNow.hour + 24 >= time1[0]:
@@ -354,9 +355,10 @@ def checkData():
                     elif timeNow.hour == time2[0] and timeNow.minute > time2[1]:
                         autoslept = False
                         autosleeping = False
-                    if autoslept == False:
-                        autosleeping = True
-                        autoslept = True
+                    else:
+                        if autoslept == False:
+                            autosleeping = True
+                            autoslept = True
 
 Thread_getData = app_getDataThread()
 Thread_getInfo = app_getInfoThread()
@@ -965,7 +967,7 @@ class dateTime_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self, alpha)
     def update(self):
-        self.surface = pygame.Surface((450, 300))
+        self.surface = pygame.Surface((550, 300))
         
         text_1 = text_object(time.strftime("%A").capitalize(), "Ultralight", 60, 255)
         width = self.surface.get_width() - text_1.get_width()

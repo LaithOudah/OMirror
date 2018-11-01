@@ -60,6 +60,15 @@ def getObservation():
             observation.get_weather_at(today)
             break
         except Exception:
+            today -= timedelta(hours=1)
+            i+=1
+        
+        try:
+            if i >= 4:
+                return
+            observation.get_weather_at(today)
+            break
+        except Exception:
             today += timedelta(hours=1)
             i+=1
     
@@ -72,7 +81,7 @@ def getObservation():
         if i == 0:
             observationArray.append(observation.get_weather_at(today))
         elif i > 0 and i < 4:
-            observationArray.append(observation.get_weather_at(today + timedelta(hours=(i-1)*3)))
+            observationArray.append(observation.get_weather_at(today + timedelta(hours=i*3)))
         else:
             today_3 = today_2 + timedelta(days=abs(3-i))
             observationArray.append(observation.get_weather_at(datetime(today_3.year, today_3.month, today_3.day, 14, 0, 0)))
@@ -87,7 +96,7 @@ def convertSwedish(status):
         return "Spridda moln"
     elif status == 803 or status == 804:
         return "Molnigt"
-    elif status >= 300 or status <= 321:
+    elif status >= 300 and status <= 321:
         return "Duggregn"
     elif status >= 500 and status <= 502:
         return "Lätt regn"
@@ -149,7 +158,7 @@ def getImage(big, status):
             return "weather_4_big"
         else:
             return "weather_4_small"
-    elif status >= 300 or status <= 502:
+    elif status >= 300 and status <= 502:
         if big == 1:
             return "weather_8_big"
         else:
