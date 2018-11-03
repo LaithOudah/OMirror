@@ -2,6 +2,7 @@ from pyowm.utils import timeformatutils
 from datetime import datetime, date, timedelta
 import pyowm
 import json
+import data
 
 # set API
 owm = None
@@ -30,7 +31,7 @@ def init():
     try:
         owm = pyowm.OWM(api)
         
-        observation = owm.three_hours_forecast(loc)
+        setObservation()
         
         print("OWM Initialised")
         owmSET = True
@@ -41,9 +42,13 @@ def setApi(api):
     global owm
     owm = pyowm.OWM(api)
 
-def setObservation(obs):
-    global observation
-    observation = owm.three_hours_forecast(obs)
+def setObservation():
+    global observation, loc, city
+    data.readData()
+    city = data.getData("weather_city")
+    loc = city + ",SE"
+    
+    observation = owm.three_hours_forecast(loc)
 
 def getCityName():
     return loc.split(",")[0]
@@ -53,25 +58,28 @@ def getObservation():
     today = datetime.now() # Prevent bug from happening
     
     i = 0
+    found = False
     while True:
         try:
             if i >= 4:
                 return
-            observation.get_weather_at(today)
+            found = True
+            observation.get_weather_at(today) 
             break
         except Exception:
             today -= timedelta(hours=1)
             i+=1
+    if not found:
+        while True:
+            try:
+                if i >= 8:
+                    return
+                observation.get_weather_at(today)
+                break
+            except Exception:
+                today += timedelta(hours=1)
+                i+=1
         
-        try:
-            if i >= 4:
-                return
-            observation.get_weather_at(today)
-            break
-        except Exception:
-            today += timedelta(hours=1)
-            i+=1
-    
     today_2 = today
     
     # 4 for todayz

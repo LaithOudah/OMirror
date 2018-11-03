@@ -61,6 +61,7 @@ flash_sequence = ((255, 255,255), (255, 0, 0), (0, 255, 0), (0,0,255))
 flash_step = 0
 flash_delay = 1000 ## in ms
 flash_active = False
+fade_delay = 0
 cycle_active = False
 rgb_active = False
 
@@ -110,7 +111,7 @@ class RGB_Cycle (threading.Thread):
                 setLights(GPIO_G, startColour[1])
                 setLights(GPIO_B, startColour[2])
                 
-                time.sleep(0.02)
+                time.sleep(0.02 + fade_delay/1000)
         cycle_active = False
 
 Thread_RGB_Cycle = RGB_Cycle()

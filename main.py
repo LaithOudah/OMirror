@@ -18,8 +18,6 @@ Running = True
 internetConnection = False
 
 name = ""
-wifi_pass = ""
-wifi_ssid = ""
 
 quote_delay = 15
 pota_delay = 8
@@ -284,7 +282,7 @@ def checkConnection():
 
 # Check data
 def checkData():
-    global name,bluetooth_name, wifi_ssid, wifi_pass, language, rotation, autoslept, autosleeping, quote_delay, pota_delay,pota_quote_show
+    global name,bluetooth_name, language, rotation, autoslept, autosleeping, quote_delay, pota_delay,pota_quote_show
     
     cc = data.getData("rgb_single").split(",")
     rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
@@ -299,16 +297,16 @@ def checkData():
     rgb.flash_sequence = fs
     rgb.flash_delay = float(data.getData("rgb_flash_delay"))
     rgb.mode = int(data.getData("rgb_mode"))
+    rgb.fade_delay = int(data.getData("rgb_fade_delay"))
     
     rotation = int(data.getData("rotation"))
-    
-    weather.city = data.getData("weather_city")
+    if weather.city != data.getData("weather_city"):
+        weather.city = data.getData("weather_city")
+        weather.setObservation()
+        weather.updateAll()
     weather.api = data.getData("weather_api")
     
     name = data.getData("name")
-
-    wifi_ssid = data.getData("wifi_ssid")
-    wifi_pass = data.getData("wifi_pass")
     
     pota_delay = int(data.getData("pota_delay"))
     quote_delay = int(data.getData("quote_delay"))

@@ -13,7 +13,7 @@ date = None
 
 def get_randomQuote():
     try:
-        return quoteArray[random.randint(0, count_max-1)]
+        return quoteArray[random.randint(0, len(countArray)-1)]
     except Exception:
         return {"author": "-", "quote": "-", "date": "-"}
 
@@ -60,5 +60,5 @@ def getJSON():
                 if element == "date":
                     date = datetime.strptime(t[element], "%Y-%m-%d %H:%M")
                 else:
-                    for i in range (0, count_max):
+                    for i in range (0, count_max-1):
                         quoteArray[i] = t[element][i]

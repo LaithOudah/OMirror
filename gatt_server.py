@@ -257,8 +257,15 @@ class OMirrorService(Service):
         self.add_characteristic(RGBSingle_Char(bus, 8, self))
         self.add_characteristic(RGBFlashSeq_Char(bus, 9, self))
         self.add_characteristic(RGBFlashDelay_Char(bus, 10, self))
-        self.add_characteristic(Wifissid_Char(bus, 11, self))
-        self.add_characteristic(Wifipass_Char(bus, 12, self))
+        self.add_characteristic(RGBFadeDelay_Char(bus, 11, self))
+        self.add_characteristic(Wifi_getData(bus, 12, self))
+        self.add_characteristic(Wifi_connect(bus, 13, self))
+        self.add_characteristic(Akt_getData(bus, 14, self))
+        self.add_characteristic(Akt_setData(bus, 15, self))
+        self.add_characteristic(Akt_deleteData(bus, 16, self))
+        self.add_characteristic(Central_getData(bus, 17, self))
+        self.add_characteristic(Central_setData(bus, 18, self))
+        self.add_characteristic(Central_deleteData(bus, 19, self))
 
 class PQ_ShowChar(Characteristic):
     CHRC_UUID = '2844'
@@ -477,11 +484,17 @@ class RGBFlashSeq_Char(Characteristic):
         
         string = ""
         
-        i = 0
+        i = 1
         for byte in self.value:
             if isinstance(byte, dbus.Byte):
                 string += "%i" % int(byte)
-        ## Function not finished
+                if(divmod(i, 3)[1] != 0):
+                    string += ","
+                else:
+                    if i < (len(self.value)):
+                        string += ":"
+                i +=1
+        data.setData("rgb_flash_sequence", string)
 
 class RGBFlashDelay_Char(Characteristic):
     CHRC_UUID = '2854'
