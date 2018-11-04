@@ -1,16 +1,25 @@
 from wifi import Cell, Scheme
 
-def Connect(ssid, key):
-    cell = list(Cell.all('wlan0'))[0]
-    print(cell)
-    
-    scheme = Scheme.for_cell('wlan0', 'main', cell, key)
-    scheme.save()
-    scheme.activate()
-    
-    scheme = Scheme.find('wlan0', 'main')
-    scheme.activate()
+cells = None
 
-print("connecting")
-Connect("TN_24GHz_B89617", "A3TK965GLH")
-print("Failed")
+def Scan():
+    global cells
+    cells = Cell.all('wlan0')
+
+
+def Connect(name, key):
+    cell = None
+    for c in cells:
+        if c.ssid == name:
+            cell = c
+            break
+    
+    if cell is not None:
+        scheme = Scheme.for_cell('wlan0', 'home', cell, key)
+        scheme.delete()
+        scheme.save()
+        scheme.activate()
+
+
+Scan()
+Connect("TN_24GHz_B89617", "A3TK976GLH")

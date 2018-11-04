@@ -27,11 +27,12 @@ sortedArray = []
 updated = False
 
 def init():
-    global owm, observation, owmSET
+    global owm, observation, owmSET, updated
     try:
         owm = pyowm.OWM(api)
         
         setObservation()
+        updated = True
         
         print("OWM Initialised")
         owmSET = True
@@ -199,7 +200,7 @@ def getImage(big, status):
 
 # Create aray for weather variables
 def getForecast():
-    global updated, forecastArray
+    global updated, forecastArray, sortedArray
     
     placeHolder = []
     
@@ -223,7 +224,6 @@ def getForecast():
                              "day": day,
                              "id": i
                             }
-        
         try:
             if forecastArray[i] != newData:
                 updated = True
@@ -233,6 +233,7 @@ def getForecast():
         placeHolder.append(newData)
     # saved cached version
     forecastArray = placeHolder
+    sortedArray = forecastArray
     
     saveJSON()
 

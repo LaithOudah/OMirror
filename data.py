@@ -17,8 +17,6 @@ def readData():
 
 def setData(key, value):
     try:
-        readData()
-        
         dataArray[key] = value
         
         writeData()

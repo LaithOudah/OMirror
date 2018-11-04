@@ -258,14 +258,17 @@ class OMirrorService(Service):
         self.add_characteristic(RGBFlashSeq_Char(bus, 9, self))
         self.add_characteristic(RGBFlashDelay_Char(bus, 10, self))
         self.add_characteristic(RGBFadeDelay_Char(bus, 11, self))
+        '''
         self.add_characteristic(Wifi_getData(bus, 12, self))
         self.add_characteristic(Wifi_connect(bus, 13, self))
+        
         self.add_characteristic(Akt_getData(bus, 14, self))
         self.add_characteristic(Akt_setData(bus, 15, self))
         self.add_characteristic(Akt_deleteData(bus, 16, self))
         self.add_characteristic(Central_getData(bus, 17, self))
         self.add_characteristic(Central_setData(bus, 18, self))
         self.add_characteristic(Central_deleteData(bus, 19, self))
+        '''
 
 class PQ_ShowChar(Characteristic):
     CHRC_UUID = '2844'
@@ -526,7 +529,7 @@ class RGBFlashDelay_Char(Characteristic):
         value_c = hex(part_1<<8 | part_2)
         data.setData("rgb_flash_delay", int(value_c, 16))
 
-class Wifissid_Char(Characteristic):
+class RGBFadeDelay_Char(Characteristic):
     CHRC_UUID = '2855'
 
     def __init__(self, bus, index, service):
@@ -538,20 +541,12 @@ class Wifissid_Char(Characteristic):
         self.value = []
     
     def ReadValue(self, options):
-        databyte = []
-        for c in data.getData("weather_city"):
-            databyte.append(dbus.Byte(ord(c)))
+        databyte = [dbus.Byte(int(data.getData("fade_delay")))]
         return databyte
     
     def WriteValue(self, value, options):
         self.value = value
-        string = ""
-        chars = []
-        for byte in self.value:
-            if isinstance(byte, dbus.Byte):
-                chars.append(chr(byte))
-        string = string.join(chars)
-        data.setData("weather_city", string)
+        data.setData("fade_delay", int(self.value[1])) 
 
 class Wifipass_Char(Characteristic):
     CHRC_UUID = '2856'
