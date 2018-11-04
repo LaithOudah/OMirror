@@ -8,14 +8,14 @@ count_max = 10
 
 api = "https://andruxnet-random-famous-quotes.p.mashape.com/?cat=famous&count=%i" % count_max
 
-quoteArray = {}
+quoteArray = []
 date = None
 
 def get_randomQuote():
     try:
-        return quoteArray[random.randint(0, len(quoteAray)-1)]
+        return quoteArray[random.randint(0, len(quoteArray)-1)]
     except Exception:
-        return {"author": "-", "quote": "-", "date": "-"}
+        return {"author": "-", "quote": "-"}
 
 def get_Data():
     global quoteArray
@@ -52,6 +52,7 @@ def saveJSON(data):
 
 def getJSON():
     global date, quoteArray
+    quoteArray = []
     with open('cached/quotes.json') as infile:
         json_data = infile.read()
         if json_data != "":
@@ -61,4 +62,4 @@ def getJSON():
                     date = datetime.strptime(t[element], "%Y-%m-%d %H:%M")
                 else:
                     for i in range (0, count_max-1):
-                        quoteArray[i] = t[element][i]
+                        quoteArray.append(t[element][i])

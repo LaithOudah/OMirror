@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*- 
-import os, time, locale, datetime
+import os, time, locale, datetime, faulthandler
 os.environ['SDL_AUDIODRIVER'] = 'dsp'
+faulthandler.enable()
 import re
 import data # Data
 import rgb # RGB
@@ -1329,44 +1330,48 @@ def app_loop():
         if rotation == 0:
             
             screen.blit(dateTime_object.get_surface(), (screen.get_width() - dateTime_object.get_surface().get_width() - 25, 25, 0 , 0))
+            screen.blit(weather_object.get_surface(), (25, 25, 0 , 0))
+            
             screen.blit(pota_object.get_surface(), pota_object.get_pos())
             screen.blit(quote_object.get_surface(), quote_object.get_pos())
             screen.blit(southtext_object.get_surface(), southtext_object.get_pos())
             
-            screen.blit(weather_object.get_surface(), (25, 25, 0 , 0))
             
             screen.blit(nyheter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - 25, screen.get_height() - nyheter_object.get_surface().get_height() - 25))
             screen.blit(aktiviteter_object.get_surface(), (screen.get_width() - aktiviteter_object.get_surface().get_width() - 25, screen.get_height() - nyheter_object.get_surface().get_height() - aktiviteter_object.get_surface().get_height() - 25))
         elif rotation == 1:
             
             screen.blit(dateTime_object.get_surface(), (25, 25, 0, 0))
+            screen.blit(weather_object.get_surface(), (25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
+            
             screen.blit(pota_object.get_surface(), (screen.get_width() / 2 - pota_object.get_surface().get_width() / 2, screen.get_height() / 2 - pota_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(quote_object.get_surface(), (screen.get_width() / 2 - quote_object.get_surface().get_width(), screen.get_height() / 2 - quote_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(southtext_object.get_surface(), (screen.get_width() - southtext_object.get_surface().get_width(), screen.get_height() / 2 - southtext_object.get_surface().get_height() / 2))
             
-            screen.blit(weather_object.get_surface(), (25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
             
             screen.blit(nyheter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - 25, 25))
             screen.blit(aktiviteter_object.get_surface(), (screen.get_width() - nyheter_object.get_surface().get_width() - aktiviteter_object.get_surface().get_width() - 25, 25))
         elif rotation == 2:
             
             screen.blit(dateTime_object.get_surface(), (25, screen.get_height() - dateTime_object.get_surface().get_height() - 25, 0 , 0))
+            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
+            
             screen.blit(pota_object.get_surface(), pota_object.get_pos())
             screen.blit(quote_object.get_surface(), quote_object.get_pos())
             screen.blit(southtext_object.get_surface(), (screen.get_width()/2 - southtext_object.get_surface().get_width() / 2, southtext_object.get_surface().get_height() / 2))
             
-            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, screen.get_height() - weather_object.get_surface().get_height() - 25, 0 , 0))
             
             screen.blit(nyheter_object.get_surface(), (25, 25))
             screen.blit(aktiviteter_object.get_surface(), (25, 25 + nyheter_object.get_surface().get_height()))
         elif rotation == 3:
             
             screen.blit(dateTime_object.get_surface(), (screen.get_width() - dateTime_object.get_surface().get_width() - 25, screen.get_height() - dateTime_object.get_surface().get_height() - 25, 0 , 0))
+            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, 25, 0 , 0))
+            
             screen.blit(pota_object.get_surface(), (screen.get_width() / 2 - pota_object.get_surface().get_width() / 2, screen.get_height() / 2 - pota_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(quote_object.get_surface(), (screen.get_width() / 2 - quote_object.get_surface().get_width() / 2, screen.get_height() / 2 - quote_object.get_surface().get_height() / 2, 0 ,0))
             screen.blit(southtext_object.get_surface(), (southtext_object.get_surface().get_width(), screen.get_height() / 2 - southtext_object.get_surface().get_height() / 2))
             
-            screen.blit(weather_object.get_surface(), (screen.get_width() - weather_object.get_surface().get_width() - 25, 25, 0 , 0))
             
             screen.blit(nyheter_object.get_surface(), (25, screen.get_height() - 25 - nyheter_object.get_surface().get_height()))
             screen.blit(aktiviteter_object.get_surface(), (25 + nyheter_object.get_surface().get_width(), screen.get_height() - 25 - aktiviteter_object.get_surface().get_height()))

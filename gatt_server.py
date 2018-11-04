@@ -541,12 +541,11 @@ class RGBFadeDelay_Char(Characteristic):
         self.value = []
     
     def ReadValue(self, options):
-        databyte = [dbus.Byte(int(data.getData("fade_delay")))]
-        return databyte
+        return [dbus.Byte(int(data.getData("rgb_fade_delay")))]
     
     def WriteValue(self, value, options):
         self.value = value
-        data.setData("fade_delay", int(self.value[1])) 
+        data.setData("rgb_fade_delay", int(self.value[1])) 
 
 class Wifipass_Char(Characteristic):
     CHRC_UUID = '2856'
