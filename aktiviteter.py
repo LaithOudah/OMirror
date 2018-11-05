@@ -32,12 +32,12 @@ def removeUnwanted():
         getJSON()
 
 def saveJSON():
-    with open('cached/aktiviteter.json', 'w') as outfile:
+    with open('/home/pi/Desktop/OMirror/cached/aktiviteter.json', 'w') as outfile:
         json.dump(aktiviteterArray, outfile)
 
 def getJSON():
     global aktiviteterArray, sortedArray
-    with open('cached/aktiviteter.json', 'r') as infile:
+    with open('/home/pi/Desktop/OMirror/cached/aktiviteter.json', 'r') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)

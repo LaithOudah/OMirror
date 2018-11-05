@@ -62,25 +62,14 @@ def getObservation():
     found = False
     while True:
         try:
-            if i >= 4:
+            if i >= 5:
                 return
             found = True
             observation.get_weather_at(today) 
             break
         except Exception:
-            today -= timedelta(hours=1)
+            today += timedelta(hours=1)
             i+=1
-    if not found:
-        while True:
-            try:
-                if i >= 8:
-                    return
-                observation.get_weather_at(today)
-                break
-            except Exception:
-                today += timedelta(hours=1)
-                i+=1
-        
     today_2 = today
     
     # 4 for todayz
@@ -238,13 +227,13 @@ def getForecast():
     saveJSON()
 
 def saveJSON():
-    with open('cached/weather.json', 'w') as outfile:
+    with open('/home/pi/Desktop/OMirror/cached/weather.json', 'w') as outfile:
         json.dump(forecastArray, outfile)
 
 def getJSON():
     global forecastArray, sortedArray
     
-    with open('cached/weather.json', 'r') as infile:
+    with open('/home/pi/Desktop/OMirror/cached/weather.json', 'r') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)

@@ -1,10 +1,12 @@
-from wifi import Cell, Scheme
+from scan import Cell
+import SchemeWPA
 
 cells = None
 
 def Scan():
     global cells
     cells = Cell.all('wlan0')
+    print(cells)
 
 
 def Connect(name, key):
@@ -15,7 +17,7 @@ def Connect(name, key):
             break
     
     if cell is not None:
-        scheme = Scheme.for_cell('wlan0', 'home', cell, key)
+        scheme = SchemeWPA.SchemeWPA('wlan0', cell.ssid,{"ssid": cell.ssid,"psk": key})
         scheme.delete()
         scheme.save()
         scheme.activate()

@@ -50,12 +50,12 @@ def news_Parse():
             saveJSON()
 
 def saveJSON():
-    with open('cached/news.json', 'w') as outfile:
+    with open('/home/pi/Desktop/OMirror/cached/news.json', 'w') as outfile:
         json.dump(newsArray, outfile)
 
 def getJSON():
     global newsArray, sortedArray
-    with open('cached/news.json') as infile:
+    with open('/home/pi/Desktop/OMirror/cached/news.json') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)

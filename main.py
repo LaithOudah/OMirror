@@ -47,7 +47,7 @@ screen = pygame.display.set_mode((1200, 1000))
 #screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
-icon = pygame.image.load('images/icon.png').convert()
+icon = pygame.image.load('/home/pi/Desktop/OMirror/images/icon.png').convert()
 pygame.display.set_icon(icon)
 
 clock = pygame.time.Clock()
@@ -58,8 +58,8 @@ white = 255, 255, 255
 
 def cache_Images():
     print("Loaded images:")
-    for item in glob.glob('images/*.png'):
-        name = item.split('/', 1)[1]
+    for item in glob.glob('/home/pi/Desktop/OMirror/images/*.png'):
+        name = item.split('/')[-1]
         name = name.split('.', 1)[0]
         cached_Images[name] = pygame.image.load(item).convert()
         print(item)
@@ -252,7 +252,13 @@ class app_getInfoThread (threading.Thread):
             if internetConnection:
                 try:
                     quotes.get_Data()
+                except Exception:
+                    pass
+                try:
                     news.news_Parse()
+                except Exception:
+                    pass
+                try:
                     weather.updateAll()
                 except Exception:
                     # Ignore all exceptions
@@ -372,23 +378,23 @@ def text_object(text, weight, size, alpha):
     font_weight = ""
     
     if weight == "Ultralight":
-        font_weight = 'font/sf_ultrathin.ttf'
+        font_weight = '/home/pi/Desktop/OMirror/font/sf_ultrathin.ttf'
     elif weight == "Light":
-        font_weight = 'font/sf_light.ttf'
+        font_weight = '/home/pi/Desktop/OMirror/font/sf_light.ttf'
     elif weight == "Thin":
-            font_weight = 'font/sf_thin.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_thin.ttf'
     elif weight == "Semibold":
-            font_weight = 'font/sf_semibold.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_semibold.ttf'
     elif weight == "Medium":
-            font_weight = 'font/sf_medium.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_medium.ttf'
     elif weight == "Heavy":
-            font_weight = 'font/sf_heavy.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_heavy.ttf'
     elif weight == "Bold":
-            font_weight = 'font/sf_bold.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_bold.ttf'
     elif weight == "Black":
-            font_weight = 'font/sf_black.ttf'
+            font_weight = '/home/pi/Desktop/OMirror/font/sf_black.ttf'
     else:
-        font_weight = 'font/sf_regular.ttf'
+        font_weight = '/home/pi/Desktop/OMirror/font/sf_regular.ttf'
     
     largeText = pygame.font.Font(font_weight, size)
     TextSurf, TextRect = text_objects(text, largeText)
@@ -1001,7 +1007,7 @@ class loading_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self, alpha)
         
-        self.img = pygame.image.load("images/logo.png").convert()
+        self.img = pygame.image.load("/home/pi/Desktop/OMirror/images/logo.png").convert()
     def setString(self, string):
         self.string = string
     def update(self):

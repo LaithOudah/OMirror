@@ -1,5 +1,11 @@
 import dbus.exceptions
 
+class ConnectionError(Exception):
+    pass
+
+
+class InterfaceError(Exception):
+    pass
 
 class InvalidArgsException(dbus.exceptions.DBusException):
     _dbus_error_name = 'org.freedesktop.DBus.Error.InvalidArgs'

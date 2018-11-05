@@ -1,6 +1,6 @@
 dataArray = {}
 
-fileName = "settings/config.txt"
+fileName = "/home/pi/Desktop/OMirror/settings/config.txt"
 
 def readData():
     file = open(fileName, "r")

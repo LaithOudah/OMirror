@@ -47,13 +47,13 @@ def get_Date():
     return date
 
 def saveJSON(data):
-    with open('cached/quotes.json', 'w') as outfile:
+    with open('/home/pi/Desktop/OMirror/cached/quotes.json', 'w') as outfile:
         json.dump(data, outfile)
 
 def getJSON():
     global date, quoteArray
     quoteArray = []
-    with open('cached/quotes.json') as infile:
+    with open('/home/pi/Desktop/OMirror/cached/quotes.json') as infile:
         json_data = infile.read()
         if json_data != "":
             t = json.loads(json_data)
