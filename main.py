@@ -13,8 +13,6 @@ import glob
 import quotes, aktiviteter
 import centered_text as centeredt
 
-import git
-
 # variables
 Running = True
 internetConnection = False
@@ -47,6 +45,7 @@ screen = pygame.display.set_mode((1200, 1000))
 #screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
 
 pygame.display.set_caption('OMirror')
+pygame.mouse.set_visible(False)
 icon = pygame.image.load('/home/pi/Desktop/OMirror/images/icon.png').convert()
 pygame.display.set_icon(icon)
 
@@ -63,15 +62,7 @@ def cache_Images():
         name = name.split('.', 1)[0]
         cached_Images[name] = pygame.image.load(item).convert()
         print(item)
-
-def updateApp():
-    print("Checking for updates")
-    try:
-        g = git.cmd.Git("/home/pi/Desktop/OMirror/")
-        g.pull()
-        print("Updating done")
-    except Exception:
-        print("Updating failed")
+    
 
 #split every n
 def splitString(string, n):
@@ -184,15 +175,20 @@ class app_getDataThread (threading.Thread):
                     if(fader.fadeing(southtext_object)):
                         continue
                     else:
-                        if(southtext_object.get_surface().get_alpha() >= 255):
-                            fader.add(1, southtext_object, 50, None)
-                        else:
-                            southtext_object.setString()
-                            fader.add(0, southtext_object, 50, None)
+                        try:
+                            if(southtext_object.get_surface().get_alpha() >= 255):
+                                fader.add(1, southtext_object, 50, None)
+                            else:
+                                southtext_object.setString()
+                                fader.add(0, southtext_object, 50, None)
+                        except Exception:
+                            pass
             else:
-                if(southtext_object.get_surface().get_alpha() >= 255):
-                    fader.add(1, southtext_object, 50, None)
-            
+                try:
+                    if(southtext_object.get_surface().get_alpha() >= 255):
+                        fader.add(1, southtext_object, 50, None)
+                except Exception:
+                            pass
             #quote and pota timestamps
             if quote_timestamp != None:
                 if datetime.datetime.now() > quote_timestamp:
@@ -216,12 +212,15 @@ def show_quote():
     
 
 def showQuote():
-    if(quote_object.get_surface().get_alpha() == 0):
-        if(pota_object.get_surface().get_alpha() >= 255 or fader.fadeing(pota_object)):
-            fader.stop(pota_object)
-            fader.add(1, pota_object, 50, show_quote)
-        else:
-            show_quote()
+    try:
+        if(quote_object.get_surface().get_alpha() == 0):
+            if(pota_object.get_surface().get_alpha() >= 255 or fader.fadeing(pota_object)):
+                fader.stop(pota_object)
+                fader.add(1, pota_object, 50, show_quote)
+            else:
+                show_quote()
+    except Exception:
+        pass
         
 def show_pota():
     global pota_timestamp
@@ -231,12 +230,15 @@ def show_pota():
     pota_timestamp = datetime.datetime.now() + datetime.timedelta(seconds=pota_delay)
 
 def showPota():
-    if(pota_object.get_surface().get_alpha() == 0):
-        if(quote_object.get_surface().get_alpha() >= 255 or fader.fadeing(quote_object)):
-            fader.stop(quote_object)
-            fader.add(1, quote_object, 50, show_pota)
-        else:
-            show_pota()
+    try:
+        if(pota_object.get_surface().get_alpha() == 0):
+            if(quote_object.get_surface().get_alpha() >= 255 or fader.fadeing(quote_object)):
+                fader.stop(quote_object)
+                fader.add(1, quote_object, 50, show_pota)
+            else:
+                show_pota()
+    except Exception:
+        pass
 
 class app_getInfoThread (threading.Thread):
     def __init__(self):
@@ -267,7 +269,7 @@ class app_getInfoThread (threading.Thread):
                 # load from cache
                 news.getJSON()
                 weather.getJSON()
-            
+            aktiviteter.getJSON()
             quotes.getJSON()
             
             centeredt.getJSON()
@@ -290,7 +292,7 @@ def checkConnection():
 
 # Check data
 def checkData():
-    global name,bluetooth_name, language, rotation, autoslept, autosleeping, quote_delay, pota_delay,pota_quote_show
+    global name,language, rotation, autoslept, autosleeping, quote_delay, pota_delay,pota_quote_show
     
     cc = data.getData("rgb_single").split(",")
     rgb.colour = (int(cc[0]), int(cc[1]), int(cc[2]))
@@ -446,6 +448,8 @@ class Box_container():
         self.anchor = anchor
     def set_alpha(self, alpha):
         self.alpha = alpha
+    def get_alpha(self):
+        return self.alpha
     def set_padding(self, x, y):
         self.padding_x = x
         self.padding_y = y
@@ -617,8 +621,9 @@ fader = fade()
 #### WIDGETS 
 class widget():
     alpha = 0
-    surface = 0
+    base_surface = 0
     rotation = 0
+    active_surface = 0
     
     def __init__(self, alpha):
         self.alpha = alpha
@@ -635,9 +640,9 @@ class widget():
     def set_rotation(self, rotation):
         self.rotation = rotation
     def rotate(self):
-        self.surface = pygame.transform.rotate(self.surface, self.rotation*90)
+        self.active_surface = pygame.transform.rotate(self.base_surface, self.rotation*90)
     def get_surface(self):
-        return self.surface
+        return self.active_surface
 
 class weather_Object(widget):    
     def __init__(self, alpha):
@@ -731,20 +736,20 @@ class weather_Object(widget):
             self.weather_day4_img = pygame.Surface((0,0))
             self.weather_day4_max = text_object("-", "Light", 28, 255)
     def update(self):
-        self.surface = pygame.Surface((600,480))
+        self.base_surface = pygame.Surface((600,480))
         
-        self.surface.blit(self.weather_status_image, (0,0,0,0))
+        self.base_surface.blit(self.weather_status_image, (0,0,0,0))
         
         
-        self.surface.blit(self.weather_status, (250/2 - self.weather_status.get_width()/2, 235, 0, 0))
+        self.base_surface.blit(self.weather_status, (250/2 - self.weather_status.get_width()/2, 235, 0, 0))
     
         
         ## NOW + 0, +3, +6 ,+ 9
         # One item
         
-        self.surface.blit(self.weather_max_0, (255, 145 ,0,0))
+        self.base_surface.blit(self.weather_max_0, (255, 145 ,0,0))
         
-        self.surface.blit(self.weather_min_0, (255, 176 ,0,0))
+        self.base_surface.blit(self.weather_min_0, (255, 176 ,0,0))
         
         width = 0
         gap = 10
@@ -753,53 +758,53 @@ class weather_Object(widget):
         else:
             width = self.weather_min_0.get_width()
         
-        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.base_surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
         
-        self.surface.blit(self.weather_max_1, (255 + width, 145 ,0,0))
+        self.base_surface.blit(self.weather_max_1, (255 + width, 145 ,0,0))
         
-        self.surface.blit(self.weather_min_1, (255 + width, 176,0,0))
+        self.base_surface.blit(self.weather_min_1, (255 + width, 176,0,0))
         
         if self.weather_max_1.get_width() > self.weather_min_1.get_width():
             width += self.weather_max_1.get_width()
         else:
             width += self.weather_min_1.get_width()
         
-        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.base_surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
         
-        self.surface.blit(self.weather_max_2, (255 + width, 145 ,0,0))
+        self.base_surface.blit(self.weather_max_2, (255 + width, 145 ,0,0))
         
-        self.surface.blit(self.weather_min_2, (255 + width, 176,0,0))
+        self.base_surface.blit(self.weather_min_2, (255 + width, 176,0,0))
         
         if self.weather_max_2.get_width() > self.weather_min_2.get_width():
             width += self.weather_max_2.get_width()
         else:
             width += self.weather_min_2.get_width()
         
-        self.surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
+        self.base_surface.blit(self.weather_splitter, (255 + width + gap, 145, 0, 0))
         width += gap*2
         
         # One item
-        self.surface.blit(self.weather_max_3, (255 + width, 145 ,0,0))
-        self.surface.blit(self.weather_min_3, (255 + width, 176,0,0))
+        self.base_surface.blit(self.weather_max_3, (255 + width, 145 ,0,0))
+        self.base_surface.blit(self.weather_min_3, (255 + width, 176,0,0))
         
         width += self.weather_max_3.get_width()
         
-        self.surface.blit(self.weather_temp, (250 + width/2 - self.weather_temp.get_width()/2, 60 ,0,0))
+        self.base_surface.blit(self.weather_temp, (250 + width/2 - self.weather_temp.get_width()/2, 60 ,0,0))
         
-        self.surface.blit(self.weather_location, (250 + (width)/2 - self.weather_location.get_width() / 2, -5,0,0))
+        self.base_surface.blit(self.weather_location, (250 + (width)/2 - self.weather_location.get_width() / 2, -5,0,0))
         
         # Sun rise & Sun down
         '''
-        self.surface.blit(self.sunrise_img, (248, 215))
-        self.surface.blit(self.weather_sunrise, (248 + 32, 215))
-        self.surface.blit(self.sunset_img, (248 + 70 +32, 215))
-        self.surface.blit(self.weather_sunrise, (248 + 70 + 64, 215))
+        self.base_surface.blit(self.sunrise_img, (248, 215))
+        self.base_surface.blit(self.weather_sunrise, (248 + 32, 215))
+        self.base_surface.blit(self.sunset_img, (248 + 70 +32, 215))
+        self.base_surface.blit(self.weather_sunrise, (248 + 70 + 64, 215))
         '''
         
         ## Other days
@@ -807,41 +812,41 @@ class weather_Object(widget):
         height = 250 + self.weather_status.get_height()
         
         
-        self.surface.blit(self.weather_day1, (0, height,0,0))
+        self.base_surface.blit(self.weather_day1, (0, height,0,0))
 
-        self.surface.blit(self.weather_day1_img, (300 / 2 - self.weather_day1_img.get_width() / 2 , height))
+        self.base_surface.blit(self.weather_day1_img, (300 / 2 - self.weather_day1_img.get_width() / 2 , height))
 
-        self.surface.blit(self.weather_day1_max, (300 - self.weather_day1_max.get_width(), height,0,0))
+        self.base_surface.blit(self.weather_day1_max, (300 - self.weather_day1_max.get_width(), height,0,0))
         
         height += self.weather_day1.get_height() + 3
         
-        self.surface.blit(self.line2_img, (0, height))
+        self.base_surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        self.surface.blit(self.weather_day2, (0, height,0,0))
-        self.surface.blit(self.weather_day2_img, (300 / 2 - self.weather_day2_img.get_width() / 2 , height))
+        self.base_surface.blit(self.weather_day2, (0, height,0,0))
+        self.base_surface.blit(self.weather_day2_img, (300 / 2 - self.weather_day2_img.get_width() / 2 , height))
         
-        self.surface.blit(self.weather_day2_max, (300 - self.weather_day2_max.get_width(), height,0,0))
+        self.base_surface.blit(self.weather_day2_max, (300 - self.weather_day2_max.get_width(), height,0,0))
         
         height += self.weather_day2.get_height() + 3
-        self.surface.blit(self.line2_img, (0, height))
+        self.base_surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        self.surface.blit(self.weather_day3, (0, height,0,0))
-        self.surface.blit(self.weather_day3_img, (300 / 2 - self.weather_day3_img.get_width() / 2 , height))
+        self.base_surface.blit(self.weather_day3, (0, height,0,0))
+        self.base_surface.blit(self.weather_day3_img, (300 / 2 - self.weather_day3_img.get_width() / 2 , height))
         
-        self.surface.blit(self.weather_day3_max, (300 - self.weather_day3_max.get_width(), height,0,0))
+        self.base_surface.blit(self.weather_day3_max, (300 - self.weather_day3_max.get_width(), height,0,0))
         height += self.weather_day3.get_height() + 3
-        self.surface.blit(self.line2_img, (0, height))
+        self.base_surface.blit(self.line2_img, (0, height))
         height += 3
         
         #One item
-        self.surface.blit(self.weather_day4, (0, height,0,0))
-        self.surface.blit(self.weather_day4_img, (300 / 2 - self.weather_day4_img.get_width() / 2 , height))
-        self.surface.blit(self.weather_day4_max, (300 - self.weather_day4_max.get_width(), height,0,0))
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.blit(self.weather_day4, (0, height,0,0))
+        self.base_surface.blit(self.weather_day4_img, (300 / 2 - self.weather_day4_img.get_width() / 2 , height))
+        self.base_surface.blit(self.weather_day4_max, (300 - self.weather_day4_max.get_width(), height,0,0))
+        self.base_surface.set_alpha(self.alpha)
         
         # rotate
         widget.rotate(self)
@@ -854,12 +859,12 @@ class southtext_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self, alpha)
         
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height())
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height())
         
-        ww, pos = self.surface.draw()
+        ww, pos = self.base_surface.draw()
         
-        self.surface = ww
-        self.surface.set_alpha(alpha)
+        self.base_surface = ww
+        self.base_surface.set_alpha(alpha)
     def setString(self):
         self.string = centeredt.getFromTime() if centeredt.getFromTime() != 0 else ""
         
@@ -869,19 +874,19 @@ class southtext_Object(widget):
     def checkString(self, string):
         return self.string == string
     def update(self):
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height())
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height())
         
         for item in self.listString:
-            self.surface.add_surface(item)
+            self.base_surface.add_surface(item)
         
-        self.surface.set_anchor(Box_container.S)
-        self.surface.set_padding(0, 25)
-        self.surface.set_justify(Box_container.CENTER)
+        self.base_surface.set_anchor(Box_container.S)
+        self.base_surface.set_padding(0, 25)
+        self.base_surface.set_justify(Box_container.CENTER)
 
-        ww, pos = self.surface.draw()
-        self.surface = ww
+        ww, pos = self.base_surface.draw()
+        self.base_surface = ww
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
         
         self.pos = pos
         
@@ -895,27 +900,27 @@ class pota_Object(widget):
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        ww, pos = self.surface.draw()
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        ww, pos = self.base_surface.draw()
         
-        self.surface = ww
-        self.surface.set_alpha(alpha)
+        self.base_surface = ww
+        self.base_surface.set_alpha(alpha)
     def getInfo(self):
         if name == "":
             self.name = text_object("-", "Thin", 82, 255)
         else:
             self.name = text_object(name, "Thin", 82, 255)
     def update(self):
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        self.surface.add_surface(self.name)
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        self.base_surface.add_surface(self.name)
         
-        self.surface.set_anchor(Box_container.C)
-        self.surface.set_padding(0, 0)
+        self.base_surface.set_anchor(Box_container.C)
+        self.base_surface.set_padding(0, 0)
 
-        ww, pos = self.surface.draw()
-        self.surface = ww
+        ww, pos = self.base_surface.draw()
+        self.base_surface = ww
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
         
         
         self.pos = pos
@@ -932,11 +937,11 @@ class quote_Object(widget):
     
     def __init__(self,alpha):
         widget.__init__(self, alpha)
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        ww, pos = self.surface.draw()
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        ww, pos = self.base_surface.draw()
         
-        self.surface = ww
-        self.surface.set_alpha(alpha)
+        self.base_surface = ww
+        self.base_surface.set_alpha(alpha)
     def setString(self):
         quote = quotes.get_randomQuote()
         self.string = quote["quote"]
@@ -948,19 +953,19 @@ class quote_Object(widget):
     def checkString(self, quote):
         return self.string == quote["quote"]
     def update(self):
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
         
         for item in self.listString:
-            self.surface.add_surface(item)
+            self.base_surface.add_surface(item)
         
-        self.surface.set_anchor(Box_container.C)
-        self.surface.set_padding(0, 0)
-        self.surface.set_justify(Box_container.CENTER)
+        self.base_surface.set_anchor(Box_container.C)
+        self.base_surface.set_padding(0, 0)
+        self.base_surface.set_justify(Box_container.CENTER)
 
-        ww, pos = self.surface.draw()
-        self.surface = ww
+        ww, pos = self.base_surface.draw()
+        self.base_surface = ww
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
                 
         self.pos = pos
         
@@ -973,29 +978,29 @@ class dateTime_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self, alpha)
     def update(self):
-        self.surface = pygame.Surface((550, 300))
+        self.base_surface = pygame.Surface((550, 300))
         
         text_1 = text_object(time.strftime("%A").capitalize(), "Ultralight", 60, 255)
-        width = self.surface.get_width() - text_1.get_width()
+        width = self.base_surface.get_width() - text_1.get_width()
         height = 0
-        self.surface.blit(text_1, (width,height))
+        self.base_surface.blit(text_1, (width,height))
         height += text_1.get_height()
         
         text_2 = text_object(time.strftime("%B").capitalize()[:3] + time.strftime(" %d, %Y"), "Thin", 60, 255)
-        width = self.surface.get_width() - text_2.get_width()
-        self.surface.blit(text_2, (width, height))
+        width = self.base_surface.get_width() - text_2.get_width()
+        self.base_surface.blit(text_2, (width, height))
         height += text_2.get_height()
         
         text_3 = text_object(time.strftime("%S"), "Ultralight", 52, 180)
-        width = self.surface.get_width() - text_3.get_width()
-        self.surface.blit(text_3, (width, height))
+        width = self.base_surface.get_width() - text_3.get_width()
+        self.base_surface.blit(text_3, (width, height))
         
         text_4 = text_object(time.strftime("%H:%M"), "Ultralight", 95, 255)
-        width = self.surface.get_width() - 58 - text_4.get_width()
+        width = self.base_surface.get_width() - 58 - text_4.get_width()
         
-        self.surface.blit(text_4,(width, height - 10))
+        self.base_surface.blit(text_4,(width, height - 10))
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
 
         # rotate
         widget.rotate(self)
@@ -1011,18 +1016,18 @@ class loading_Object(widget):
     def setString(self, string):
         self.string = string
     def update(self):
-        self.surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
-        self.surface.add_surface(self.img)
-        self.surface.add_surface(text_object(self.string,  "Thin", 36, 255))
+        self.base_surface = Box_container(True, screen.get_width() /2, screen.get_height() / 2)
+        self.base_surface.add_surface(self.img)
+        self.base_surface.add_surface(text_object(self.string,  "Thin", 36, 255))
         
-        self.surface.set_anchor(Box_container.C)
-        self.surface.set_padding(0, 0)
-        self.surface.set_justify(Box_container.CENTER)
+        self.base_surface.set_anchor(Box_container.C)
+        self.base_surface.set_padding(0, 0)
+        self.base_surface.set_justify(Box_container.CENTER)
 
-        ww, pos = self.surface.draw()
-        self.surface = ww
+        ww, pos = self.base_surface.draw()
+        self.base_surface = ww
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
 
         self.pos = pos
         
@@ -1051,7 +1056,7 @@ class nyheter_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self,alpha)
         
-        self.surface = pygame.Surface((250, 160))
+        self.base_surface = pygame.Surface((250, 160))
         self.item_holder = pygame.Surface((250, 160))
         
     def getInfo(self):
@@ -1097,43 +1102,43 @@ class nyheter_Object(widget):
             self.item_5_time = text_object("-", "Thin", 16, 40)
             self.item_5_text = text_object("-", "Light", 16, 50)
     def update(self):
-        self.surface = pygame.Surface((250, 160))
+        self.base_surface = pygame.Surface((250, 160))
         
-        self.surface.blit(self.header, (self.surface.get_width() - self.header.get_width(), 0, 0 ,0))
+        self.base_surface.blit(self.header, (self.base_surface.get_width() - self.header.get_width(), 0, 0 ,0))
         
-        self.surface.blit(cached_Images['line'],(0, self.header.get_height() + 3, 0 ,0))
+        self.base_surface.blit(cached_Images['line'],(0, self.header.get_height() + 3, 0 ,0))
         height = self.header.get_height() + 6
         
-        self.surface.blit(self.item_holder, (0, height))
+        self.base_surface.blit(self.item_holder, (0, height))
         
         self.item_holder.fill(black)
         
         height = 0
         self.item_holder.blit(self.item_1_time, (0, height))
-        width = self.surface.get_width() - self.item_1_text.get_width() if self.item_1_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_1_text.get_width() if self.item_1_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_1_text, (width, height, 0, 0))
         height += self.item_1_text.get_height() + 3
         
         self.item_holder.blit(self.item_2_time, (0, height))
-        width = self.surface.get_width() - self.item_2_text.get_width() if self.item_2_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_2_text.get_width() if self.item_2_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_2_text, (width, height, 0, 0))
         height += self.item_2_text.get_height() + 3
         
         self.item_holder.blit(self.item_3_time, (0, height))
-        width = self.surface.get_width() - self.item_3_text.get_width() if self.item_3_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_3_text.get_width() if self.item_3_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_3_text, (width, height, 0, 0))
         height += self.item_3_text.get_height() + 3
         
         self.item_holder.blit(self.item_4_time, (0, height))
-        width = self.surface.get_width() - self.item_4_text.get_width() if self.item_4_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_4_text.get_width() if self.item_4_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_4_text, (width, height, 0, 0))
         height += self.item_4_text.get_height() + 3
         
         self.item_holder.blit(self.item_5_time, (0, height))
-        width = self.surface.get_width() - self.item_5_text.get_width() if self.item_5_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_5_text.get_width() if self.item_5_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_5_text, (width, height, 0, 0))
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
 
         # rotate
         widget.rotate(self)
@@ -1144,7 +1149,7 @@ class aktiviteter_Object(widget):
     def __init__(self,alpha):
         widget.__init__(self,alpha)
         
-        self.surface = pygame.Surface((250, 160))
+        self.base_surface = pygame.Surface((250, 160))
         self.item_holder = pygame.Surface((250, 160))
     def getInfo(self):
         self.header = text_object("Aktiviteter", "Thin", 32, 255)
@@ -1189,44 +1194,44 @@ class aktiviteter_Object(widget):
             self.item_5_time = text_object("-", "Thin", 16, 40)
             self.item_5_text = text_object("-", "Light", 16, 50)
     def update(self):
-        self.surface = pygame.Surface((250, 160))
+        self.base_surface = pygame.Surface((250, 160))
         
-        self.surface.blit(self.header, (self.surface.get_width() - self.header.get_width(), 0, 0 ,0))
+        self.base_surface.blit(self.header, (self.base_surface.get_width() - self.header.get_width(), 0, 0 ,0))
         
-        self.surface.blit(cached_Images['line'],(0, self.header.get_height() + 3, 0 ,0))
+        self.base_surface.blit(cached_Images['line'],(0, self.header.get_height() + 3, 0 ,0))
         height = self.header.get_height() + 6
         
-        self.surface.blit(self.item_holder, (0, height))
+        self.base_surface.blit(self.item_holder, (0, height))
         
         
         self.item_holder.fill(black)
         
         height = 0
         self.item_holder.blit(self.item_1_time, (0, height))
-        width = self.surface.get_width() - self.item_1_text.get_width() if self.item_1_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_1_text.get_width() if self.item_1_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_1_text, (width, height, 0, 0))
         height += self.item_1_text.get_height() + 3
         
         self.item_holder.blit(self.item_2_time, (0, height))
-        width = self.surface.get_width() - self.item_2_text.get_width() if self.item_2_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_2_text.get_width() if self.item_2_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_2_text, (width, height, 0, 0))
         height += self.item_2_text.get_height() + 3
         
         self.item_holder.blit(self.item_3_time, (0, height))
-        width = self.surface.get_width() - self.item_3_text.get_width() if self.item_3_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_3_text.get_width() if self.item_3_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_3_text, (width, height, 0, 0))
         height += self.item_3_text.get_height() + 3
         
         self.item_holder.blit(self.item_4_time, (0, height))
-        width = self.surface.get_width() - self.item_4_text.get_width() if self.item_4_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_4_text.get_width() if self.item_4_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_4_text, (width, height, 0, 0))
         height += self.item_4_text.get_height() + 3
         
         self.item_holder.blit(self.item_5_time, (0, height))
-        width = self.surface.get_width() - self.item_5_text.get_width() if self.item_5_text.get_width() < 250 - 75 else 75
+        width = self.base_surface.get_width() - self.item_5_text.get_width() if self.item_5_text.get_width() < 250 - 75 else 75
         self.item_holder.blit(self.item_5_text, (width, height, 0, 0))
         
-        self.surface.set_alpha(self.alpha)
+        self.base_surface.set_alpha(self.alpha)
 
         # rotate
         widget.rotate(self)
@@ -1279,16 +1284,6 @@ def app_loop():
     aktiviteter_object.getInfo()
     pota_object.getInfo()
     quote_object.setString()
-    
-    # Show Loading screen
-    screen.fill(black)
-    loading_object.setString("Kollar efter uppdateringar...")
-    loading_object.update()
-    screen.blit(loading_object.get_surface(), loading_object.get_pos())
-    pygame.display.update()
-    
-    # Update on start
-    updateApp()
     
     screen.fill(black)
     

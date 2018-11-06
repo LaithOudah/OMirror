@@ -11,8 +11,11 @@ def addTo(timeStart, timeEnd, text):
     saveJSON()
 
 def removeFrom(id):
-    centeredArray.pop(id)
-    saveJSON()
+    try:
+        centeredArray.pop(id)
+        saveJSON()
+    except Exception:
+        pass
 
 def getFromTime():
     timeNow = datetime.now()

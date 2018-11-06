@@ -10,7 +10,7 @@ GPIO_WIFI_R = 5
 GPIO_WIFI_G = 6
 GPIO_WIFI_B = 13
 
-GPIO_BLUETOOTH = 26
+
 
 # Imports
 import RPi.GPIO as GPIO
@@ -41,7 +41,7 @@ def init():
 
     GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         
-    GPIO.setup(GPIO_BLUETOOTH, GPIO.OUT)
+    
     GPIO.setup(GPIO_WIFI_R, GPIO.OUT)
     GPIO.setup(GPIO_WIFI_G, GPIO.OUT)
     GPIO.setup(GPIO_WIFI_B, GPIO.OUT)
@@ -184,9 +184,6 @@ def RGB_on():
             if not cycle_active:
                 Thread_RGB_Cycle= RGB_Cycle()
                 Thread_RGB_Cycle.start()
-
-def bluetooth_led(val):
-    GPIO.output(GPIO_BLUETOOTH, val)
 
 def wifi_led(val):
     if val:

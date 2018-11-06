@@ -9,15 +9,29 @@ updated = False
 def init():
     getJSON()
 
-def addTo(date, text):
+def addTo(id, date, text):
     global updated
+    
     date = date.strftime("%Y-%m-%d %H:%M")
     
-    aktiviteterArray.append({"date": date, "text": text})
-    
+    try:
+        # exists update
+        if aktiviteterArray[id]:
+            aktiviteterArray[id] = {"date": date, "text": text}
+    except IndexError:
+        aktiviteterArray.append({"date": date, "text": text})
+        
     updated = True
     saveJSON()
     getJSON()
+
+def removeFrom(id):
+    try:
+        aktiviteterArray.pop(id)
+        saveJSON()
+        getJSON()
+    except Exception:
+        pass
 
 def removeUnwanted():
     global updated
