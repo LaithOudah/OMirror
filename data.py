@@ -1,6 +1,6 @@
 dataArray = {}
 
-fileName = "settings/config.txt"
+fileName = "/home/pi/Desktop/OMirror/settings/config.txt"
 
 def readData():
     file = open(fileName, "r")
@@ -9,7 +9,10 @@ def readData():
         if line is not "":
             line = line.split("=")
             
-            dataArray[line[0]] = line[1].replace("\n", "")
+            try:
+                dataArray[line[0]] = line[1].replace("\n", "")
+            except Exception:
+                pass
     file.close()
 
 def setData(key, value):

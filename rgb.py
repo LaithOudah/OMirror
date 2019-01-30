@@ -10,7 +10,7 @@ GPIO_WIFI_R = 5
 GPIO_WIFI_G = 6
 GPIO_WIFI_B = 13
 
-GPIO_BLUETOOTH = 26
+
 
 # Imports
 import RPi.GPIO as GPIO
@@ -36,10 +36,12 @@ def init():
     pi = pigpio.pi()
     
     GPIO.setmode(GPIO.BCM)
+    
+    GPIO.setwarnings(False)
 
     GPIO.setup(GPIO_BUTTON, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         
-    GPIO.setup(GPIO_BLUETOOTH, GPIO.OUT)
+    
     GPIO.setup(GPIO_WIFI_R, GPIO.OUT)
     GPIO.setup(GPIO_WIFI_G, GPIO.OUT)
     GPIO.setup(GPIO_WIFI_B, GPIO.OUT)
@@ -59,6 +61,7 @@ flash_sequence = ((255, 255,255), (255, 0, 0), (0, 255, 0), (0,0,255))
 flash_step = 0
 flash_delay = 1000 ## in ms
 flash_active = False
+fade_delay = 0
 cycle_active = False
 rgb_active = False
 
@@ -108,7 +111,7 @@ class RGB_Cycle (threading.Thread):
                 setLights(GPIO_G, startColour[1])
                 setLights(GPIO_B, startColour[2])
                 
-                time.sleep(0.02)
+                time.sleep(0.02 + fade_delay/1000)
         cycle_active = False
 
 Thread_RGB_Cycle = RGB_Cycle()
@@ -181,9 +184,6 @@ def RGB_on():
             if not cycle_active:
                 Thread_RGB_Cycle= RGB_Cycle()
                 Thread_RGB_Cycle.start()
-
-def bluetooth_led(val):
-    GPIO.output(GPIO_BLUETOOTH, val)
 
 def wifi_led(val):
     if val:
